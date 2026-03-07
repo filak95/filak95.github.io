@@ -33,6 +33,16 @@ python -m http.server 8080
 - 分享图：html2canvas
 - PWA：manifest.json + Service Worker
 
+## 推送到 GitHub
+
+在 GitHub 上新建仓库后，在项目目录执行：
+
+```bash
+git remote add origin https://github.com/你的用户名/仓库名.git
+git branch -M main
+git push -u origin main
+```
+
 ## 许可
 
 MIT

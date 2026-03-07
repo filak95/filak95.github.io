@@ -1,12 +1,12 @@
 {
   "name": "TodayBingo",
   "short_name": "TodayBingo",
-  "description": "多表 Bingo 打卡，25 词自定义，马卡龙色格子的极简应用",
+  "description": "多表 Bingo 打卡，莫兰迪色系，25 词 8 字内，背景图与毛玻璃",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f5f5f7",
-  "theme_color": "#f5f5f7",
+  "background_color": "#f5f4f2",
+  "theme_color": "#f5f4f2",
   "scope": "./",
   "icons": [
     {

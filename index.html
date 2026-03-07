@@ -15,27 +15,25 @@
       --cell-min: 0;
       --safe-top: env(safe-area-inset-top, 0);
       --safe-bottom: env(safe-area-inset-bottom, 0);
-      --bg: #f5f5f7;
-      --text: #1d1d1f;
-      --header-bg: rgba(255,255,255,0.8);
-      --tab-bg: #e8e8ed;
-      --tab-active-bg: #1d1d1f;
+      --bg: #f5f4f2;
+      --text: #403b3a;
+      --header-bg: rgba(255,255,255,0.9);
+      --tab-bg: #e0d7cf;
+      --tab-active-bg: #403b3a;
       --border: rgba(0,0,0,0.06);
-      --cell-text: rgba(255,255,255,0.95);
-      --cell-glass-border: rgba(255,255,255,0.35);
+      --cell-text: rgba(255,255,255,0.96);
+      --cell-glass-border: rgba(255,255,255,0.45);
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #1c1c1e;
-        --text: #f5f5f7;
-        --header-bg: rgba(44,44,46,0.9);
-        --tab-bg: #3a3a3c;
-        --tab-active-bg: #f5f5f7;
-        --border: rgba(255,255,255,0.08);
-        --cell-text: rgba(255,255,255,0.92);
-        --cell-glass-border: rgba(255,255,255,0.2);
-      }
+    :root[data-theme="dark"] {
+      --bg: #2b2928;
+      --text: #f5f4f2;
+      --header-bg: rgba(50,48,47,0.9);
+      --tab-bg: #4a4643;
+      --tab-active-bg: #f5f4f2;
+      --border: rgba(255,255,255,0.08);
+      --cell-text: rgba(255,255,255,0.94);
+      --cell-glass-border: rgba(255,255,255,0.28);
     }
 
     * {
@@ -115,8 +113,25 @@
       font-size: 0.75rem;
       color: #86868b;
     }
-    .switch-label input { width: 18px; height: 18px; accent-color: #007aff; }
+    .switch-label input { width: 18px; height: 18px; accent-color: #8b8685; }
     .switch-text { user-select: none; }
+
+    .theme-toggle {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--tab-bg);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .bg-upload {
+      font-size: 0.75rem;
+      color: #86868b;
+      cursor: pointer;
+    }
+    .bg-upload input { display: none; }
 
     /* Tabs / Table list */
     .tabs {
@@ -157,10 +172,7 @@
       color: #86868b;
       border: 1px dashed #c7c7cc;
     }
-
-    @media (prefers-color-scheme: dark) {
-      .tab-add { border-color: #555; color: #999; }
-    }
+    :root[data-theme="dark"] .tab-add { border-color: #555; color: #999; }
 
     /* Main content area */
     .main {
@@ -210,7 +222,7 @@
     .create-screen input[type="text"]:focus,
     .create-screen textarea:focus {
       outline: none;
-      border-color: #007aff;
+      border-color: #8b8685;
     }
 
     .create-screen textarea {
@@ -244,7 +256,7 @@
     }
 
     .btn-primary {
-      background: #007aff;
+      background: #8b8685;
       color: #fff;
       width: 100%;
       margin-top: 8px;
@@ -349,6 +361,13 @@
       overflow: hidden;
     }
 
+    body.has-bg-image .cell {
+      background-color: rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
     /* Empty state */
     .empty-state {
       flex: 1;
@@ -428,11 +447,13 @@
   <header class="header">
     <h1>TodayBingo</h1>
     <div class="color-picker-wrap">
+      <button type="button" class="theme-toggle" id="themeToggle">浅 · 莫兰迪</button>
       <label class="switch-label">
         <input type="checkbox" id="useThemeColor" />
-        <span class="switch-text">主题色</span>
+        <span class="switch-text">色相</span>
       </label>
-      <input type="color" id="globalColor" value="#007aff" title="选定后所有格子使用该色系渐变" />
+      <input type="color" id="globalColor" value="#a3a0a0" title="莫兰迪色相微调" />
+      <label class="bg-upload">背景图<input type="file" id="bgUpload" accept="image/*" /></label>
     </div>
   </header>
 
@@ -457,7 +478,7 @@
         <div class="form-group">
           <label for="wordsInput">25 个词（每行一个）</label>
           <textarea id="wordsInput" placeholder="输入 25 个词，每行一个&#10;例如：&#10;晨跑&#10;阅读&#10;..." rows="12"></textarea>
-          <p class="hint">请恰好输入 25 行，每行建议不超过 12 个中文字符。点击生成后会随机打乱填入 5×5 格子。</p>
+          <p class="hint">请恰好输入 25 行，每行不超过 8 个字（多出自动截断）。点击生成后会随机打乱填入 5×5 格子。</p>
           <p class="hint hint-char" id="wordsCharHint"></p>
         </div>
         <div class="form-actions">
@@ -504,9 +525,9 @@
       function loadData() {
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
-          return raw ? JSON.parse(raw) : { tables: [], activeId: null, globalColor: '' };
+          return raw ? JSON.parse(raw) : { tables: [], activeId: null, globalColor: '', theme: 'light' };
         } catch (e) {
-          return { tables: [], activeId: null, globalColor: '' };
+          return { tables: [], activeId: null, globalColor: '', theme: 'light' };
         }
       }
 
@@ -518,7 +539,7 @@
         return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
       }
 
-      const MAX_CHARS = 12;
+      const MAX_CHARS = 8;
 
       function parseWords(text) {
         return text.split(/\n/).map(s => (s.trim().slice(0, MAX_CHARS))).filter(Boolean);
@@ -526,21 +547,21 @@
 
       function adaptiveFontSize(charCount) {
         if (charCount <= 0) return 14;
-        if (charCount <= 2) return 20;
-        if (charCount >= 10) return 12;
-        return Math.round(20 - (charCount - 2) * (8 / 8));
+        if (charCount <= 2) return 22;
+        if (charCount >= 8) return 12;
+        return Math.round(22 - (charCount - 2) * (10 / 6));
       }
 
       function isDarkMode() {
-        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return (state && state.data && state.data.theme) === 'dark';
       }
 
       function macaronGradient(hue, customHue, dark) {
         const h = customHue !== undefined && customHue !== null && customHue !== '' ? customHue : hue;
-        const s = 42 + Math.random() * 28;
+        const s = 14 + Math.random() * 10;
         const darkMode = dark === true;
-        const l1 = darkMode ? 38 + Math.random() * 14 : 58 + Math.random() * 16;
-        const l2 = darkMode ? l1 - 10 - Math.random() * 6 : l1 - 10 - Math.random() * 8;
+        const l1 = darkMode ? 36 + Math.random() * 8 : 68 + Math.random() * 6;
+        const l2 = darkMode ? l1 - (6 + Math.random() * 4) : l1 - (8 + Math.random() * 4);
         return `linear-gradient(135deg, hsl(${h}, ${s}%, ${l1}%), hsl(${h}, ${s}%, ${l2}%))`;
       }
 
@@ -570,6 +591,38 @@
         return a;
       }
 
+      const IDB_NAME = 'todaybingo_assets';
+      const IDB_STORE = 'settings';
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+      async function idbSet(key, value) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(value, key);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+      async function idbGet(key) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(IDB_STORE, 'readonly');
+          const req = tx.objectStore(IDB_STORE).get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
       const state = {
         data: loadData(),
         get activeTable() {
@@ -577,6 +630,8 @@
           return this.data.tables.find(t => t.id === this.data.activeId) || null;
         }
       };
+      state.data.theme = state.data.theme || 'light';
+      document.documentElement.dataset.theme = state.data.theme;
 
       const dom = {
         tabs: document.getElementById('tabs'),
@@ -590,7 +645,9 @@
         btnShuffle: document.getElementById('btnShuffle'),
         btnEditTable: document.getElementById('btnEditTable'),
         board: document.getElementById('board'),
-        globalColor: document.getElementById('globalColor')
+        globalColor: document.getElementById('globalColor'),
+        themeToggle: document.getElementById('themeToggle'),
+        bgUpload: document.getElementById('bgUpload')
       };
 
       function showScreen(name) {
@@ -758,7 +815,7 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const colors = ['#ffb3ba','#ffdfba','#ffffba','#baffc9','#bae1ff','#e0bbe4','#fec8d8','#ffecd2'];
+        const colors = ['#d8c4b6','#c9d6df','#b7c4cf','#b8a39f','#c5c5b8','#a4b8a8','#c3b6d8','#b5a99e'];
         const pieces = [];
         const count = 120;
         for (let i = 0; i < count; i++) {
@@ -796,6 +853,7 @@
       }
 
       function toggleCell(table, index) {
+        if (navigator.vibrate) navigator.vibrate(10);
         const completed = table.completed || [];
         const i = completed.indexOf(index);
         if (i === -1) completed.push(index);
@@ -887,6 +945,44 @@
       document.getElementById('shareSave').addEventListener('click', captureShareImage);
       document.getElementById('shareClose').addEventListener('click', closeShareView);
 
+      function applyTheme(theme) {
+        state.data.theme = theme;
+        document.documentElement.dataset.theme = theme;
+        saveData(state.data);
+        if (dom.themeToggle) dom.themeToggle.textContent = theme === 'dark' ? '深 · 莫兰迪' : '浅 · 莫兰迪';
+        renderBoard();
+      }
+      if (dom.themeToggle) {
+        dom.themeToggle.textContent = state.data.theme === 'dark' ? '深 · 莫兰迪' : '浅 · 莫兰迪';
+        dom.themeToggle.addEventListener('click', () => applyTheme(state.data.theme === 'dark' ? 'light' : 'dark'));
+      }
+
+      function applyBackgroundImage(dataUrl) {
+        document.body.style.backgroundImage = dataUrl ? `url(${dataUrl})` : '';
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.classList.toggle('has-bg-image', !!dataUrl);
+      }
+      async function loadBackgroundImage() {
+        try {
+          const dataUrl = await idbGet('bgImage');
+          if (dataUrl) applyBackgroundImage(dataUrl);
+        } catch (e) {}
+      }
+      if (dom.bgUpload) {
+        dom.bgUpload.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = async () => {
+            const dataUrl = reader.result;
+            applyBackgroundImage(dataUrl);
+            await idbSet('bgImage', dataUrl);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
       dom.wordsInput.addEventListener('input', () => {
         const lines = dom.wordsInput.value.split(/\n/).map(s => s.trim()).filter(Boolean);
         const over = lines.filter(l => l.length > MAX_CHARS);
@@ -914,8 +1010,9 @@
       function init() {
         state.data.globalColor = state.data.globalColor || '';
         state.data.useThemeColor = state.data.useThemeColor !== false;
-        dom.globalColor.value = state.data.globalColor || '#007aff';
+        dom.globalColor.value = state.data.globalColor || '#a3a0a0';
         document.getElementById('useThemeColor').checked = state.data.useThemeColor;
+        loadBackgroundImage();
 
         if (state.data.tables.length === 0) {
           showScreen('empty');

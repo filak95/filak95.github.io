@@ -32,6 +32,15 @@ python -m http.server 8080
 - 分享图：html2canvas
 - PWA：manifest.json + Service Worker
 
+## 更新日志
+
+### v1.0.1 (2026-03-07)
+
+- 彩带动画持续时间精确缩短至 1 秒，保持流畅一致
+- Reduced ribbon animation duration to exactly 1s with smooth playback
+- 调整彩带区域字体与背景对比度，满足 WCAG 2.1 AA（≥4.5:1）
+- Adjusted ribbon area text/background contrast to meet WCAG 2.1 AA (≥4.5:1)
+
 ## 推送到 GitHub
 
 在 GitHub 上新建仓库后，在项目目录执行：

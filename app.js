@@ -1,3 +1,39 @@
+function applyBackground() {
+  const bg = state.data.settings.background || 'sunset';
+  const theme = state.data.theme;
+  const hasCustom = bg === 'custom' && state.bgImageUrl;
+  const brightness = hasCustom
+    ? state.data.settings.backgroundImageBrightness
+    : (window.BG_BRIGHTNESS[bg] || 0.5);
+  const overlayBase = theme === 'dark' ? 0.38 : 0.24;
+  const overlayOpacity = Math.max(0.2, Math.min(0.6, overlayBase + (0.6 - brightness) * 0.35));
+
+  const lut = window.THEME_LUT_FILTERS[bg] || window.THEME_LUT_FILTERS.sunset;
+
+  let backgroundValue;
+  if (hasCustom) {
+    backgroundValue = `url("${state.bgImageUrl}")`;
+  } else if (window.isLowEndDeviceState() || !state.data.settings.useHdImages) {
+    backgroundValue = window.BG_GRADIENTS[bg] || window.BG_GRADIENTS.sunset;
+  } else if (window.isImagePreloaded(bg)) {
+    backgroundValue = `url("${window.THEME_BACKGROUND_IMAGES[bg]}")`;
+  } else {
+    backgroundValue = window.BG_GRADIENTS[bg] || window.BG_GRADIENTS.sunset;
+  }
+
+  const filterValue = window.isLowEndDeviceState()
+    ? `brightness(${theme === 'dark' ? 0.85 : 1.0})`
+    : `brightness(${lut.brightness}) contrast(${lut.contrast}) saturate(${lut.saturate}) hue-rotate(${lut.hueRotate}deg)`;
+
+  document.documentElement.style.setProperty('--bg-image', backgroundValue);
+  document.documentElement.style.setProperty('--bg-overlay', `rgba(0,0,0,${overlayOpacity})`);
+  document.documentElement.style.setProperty('--bg-filter', filterValue);
+
+  // 强制触发浏览器重排，使伪元素重新计算样式
+  document.body.offsetHeight;
+
+  window.updateParticlesForTheme(bg, true);
+}
 (function() {
   'use strict';
 

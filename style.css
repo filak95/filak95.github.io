@@ -1,3 +1,13 @@
+:root[data-app-theme="glass"] body {
+  animation: bgRefresh 0.01s;
+}
+
+@keyframes bgRefresh {
+  0%, 100% { opacity: 1; }
+}:root[data-app-theme="glass"] body {
+  animation: bgRefresh 0.01s;
+}
+
 :root {
   --safe-top: env(safe-area-inset-top, 0);
   --safe-bottom: env(safe-area-inset-bottom, 0);
@@ -94,6 +104,7 @@ html, body {
   background-position: center;
   z-index: -2;
   filter: var(--bg-filter);
+  opacity: 1;
   transition: opacity 800ms ease-in-out, background-image 800ms ease-in-out;
 }
 

@@ -2,6 +2,10 @@
 
 移动端优先的 Bingo 打卡 Web 应用。莫兰迪色系、8 字限制、主题切换、背景图（IndexedDB）、毛玻璃格子、连线彩带与 PWA。
 
+## 在线演示
+
+https://YOUR_GITHUB_USERNAME.github.io/TodayBingo/
+
 ## 功能
 
 - **多表管理**：创建多个 Bingo 表，数据保存在 localStorage，支持 3×3 / 4×4 / 5×5
@@ -12,7 +16,7 @@
 - **动效**：点击格子震动；横/竖/斜任一线完成时震动 + 莫兰迪色彩带雨
 - **PWA**：可「添加到主屏幕」，全屏、离线可用
 
-## 使用
+## 本地开发
 
 用本地静态服务器打开项目根目录后访问，例如：
 
@@ -23,6 +27,20 @@ python -m http.server 8080
 ```
 
 浏览器打开对应地址即可。移动端可「添加到主屏幕」使用。
+
+## 测试
+
+CI 会执行基础的 HTML 结构检查。需要本地验证时，可直接启动本地服务器并进行手动回归。
+
+## 测试覆盖率
+
+当前未引入自动化测试用例，覆盖率为 0%。
+
+## 贡献指南
+
+1. Fork 本仓库并创建分支
+2. 完成修改并确保 CI 通过
+3. 提交 Pull Request，描述改动动机与验证方式
 
 ## 技术
 
@@ -38,16 +56,6 @@ python -m http.server 8080
 - Reduced ribbon animation duration to exactly 1s with smooth playback
 - 调整彩带区域字体与背景对比度，满足 WCAG 2.1 AA（≥4.5:1）
 - Adjusted ribbon area text/background contrast to meet WCAG 2.1 AA (≥4.5:1)
-
-## 推送到 GitHub
-
-在 GitHub 上新建仓库后，在项目目录执行：
-
-```bash
-git remote add origin https://github.com/你的用户名/仓库名.git
-git branch -M main
-git push -u origin main
-```
 
 ## 许可
 

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          mkdir -p dist
+          cp index.html manifest.json sw.js dist/
+      - name: Validate HTML
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html = Path("index.html").read_text(encoding="utf-8")
+          required = [
+              ":root[data-app-theme=\"glass\"] .cell",
+              "border: 1px solid rgba(255,255,255,0.2)",
+              "box-shadow: inset",
+              "transition: background-image 600ms ease-in-out",
+              "transition: background 600ms ease-in-out",
+          ]
+          missing = [item for item in required if item not in html]
+          if missing:
+              raise SystemExit("Missing: " + ", ".join(missing))
+          print("HTML validation passed")
+          PY

@@ -102,7 +102,7 @@
       background-position: center;
       z-index: -2;
       filter: var(--bg-filter, none);
-      transition: background-image 0.5s ease, filter 0.3s ease;
+      transition: background-image 600ms ease-in-out, filter 600ms ease-in-out;
     }
 
     :root[data-app-theme="glass"] body::after {
@@ -114,7 +114,7 @@
       bottom: 0;
       background: var(--bg-overlay, rgba(0,0,0,0.3));
       z-index: -1;
-      transition: background 0.3s ease;
+      transition: background 600ms ease-in-out;
     }
 
     .app-layout {
@@ -321,9 +321,9 @@
       border-radius: var(--radius);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: none;
-      border: none;
-      background: transparent;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.35), inset 0 -6px 12px rgba(0,0,0,0.25);
       transition: background 150ms ease-out, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
@@ -1471,6 +1471,7 @@
         forest: 'linear-gradient(135deg, #134e5e 0%, #71b280 100%)',
         night: 'linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)'
       };
+      const BG_SEQUENCE = Object.keys(BG_GRADIENTS);
 
       // Background brightness for auto opacity adjustment
       const BG_BRIGHTNESS = {
@@ -1777,6 +1778,13 @@
         });
         applyBackground();
         updateBackgroundUI();
+      }
+
+      function advanceBackgroundTheme() {
+        const current = state.data.settings.background || 'sunset';
+        const idx = BG_SEQUENCE.indexOf(current);
+        const next = BG_SEQUENCE[(idx + 1 + BG_SEQUENCE.length) % BG_SEQUENCE.length] || BG_SEQUENCE[0];
+        setBackground(next);
       }
 
       function updateBackgroundUI() {
@@ -2122,12 +2130,8 @@
           const text = words[wordIndex] || '';
           cell.dataset.index = String(i);
           
-          if (!completedSet.has(i)) {
-            if (isGlass) {
-              cell.style.background = 'transparent';
-            } else {
-              cell.style.background = cardGradient(wordIndex, opacity);
-            }
+          if (!completedSet.has(i) && !isGlass) {
+            cell.style.background = cardGradient(wordIndex, opacity);
           }
           
           cell.style.fontSize = adaptiveFontSize(text, cellSize) + 'px';
@@ -2220,9 +2224,7 @@
           if (!completed.includes(index)) {
             const settings = state.data.settings;
             const opacity = settings.cellOpacity / 100;
-            if (settings.appTheme === 'glass') {
-              cell.style.background = 'transparent';
-            } else {
+            if (settings.appTheme !== 'glass') {
               cell.style.background = cardGradient(table.order[index], opacity);
             }
           }
@@ -2233,6 +2235,7 @@
           if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
           runConfetti();
         }
+        advanceBackgroundTheme();
       }
 
       function shuffleBoard() {

@@ -4,8 +4,6 @@
 
 @keyframes bgRefresh {
   0%, 100% { opacity: 1; }
-}:root[data-app-theme="glass"] body {
-  animation: bgRefresh 0.01s;
 }
 
 :root {
@@ -90,6 +88,7 @@ html, body {
 :root[data-app-theme="glass"] body {
   background: var(--bg);
   position: relative;
+  isolation: isolate;
 }
 
 :root[data-app-theme="glass"] body::before {
@@ -102,9 +101,10 @@ html, body {
   background-image: var(--bg-image);
   background-size: cover;
   background-position: center;
-  z-index: -2;
+  z-index: 0;
   filter: var(--bg-filter);
   opacity: 1;
+  pointer-events: none;
   transition: opacity 800ms ease-in-out, background-image 800ms ease-in-out;
 }
 
@@ -116,7 +116,8 @@ html, body {
   right: 0;
   bottom: 0;
   background: var(--bg-overlay);
-  z-index: -1;
+  z-index: 1;
+  pointer-events: none;
   transition: background 800ms ease-in-out;
 }
 
@@ -126,7 +127,7 @@ html, body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -3;
+  z-index: 2;
   opacity: 0;
   background-size: cover;
   background-position: center;
@@ -144,7 +145,7 @@ html, body {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -1;
+  z-index: 3;
   pointer-events: none;
   opacity: var(--particle-opacity);
 }
@@ -153,6 +154,8 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
+  z-index: 4;
 }
 
 .header {

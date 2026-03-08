@@ -102,7 +102,7 @@
       background-position: center;
       z-index: -2;
       filter: var(--bg-filter, none);
-      transition: background-image 600ms ease-in-out, filter 600ms ease-in-out;
+      transition: opacity 800ms ease-in-out;
     }
 
     :root[data-app-theme="glass"] body::after {
@@ -114,7 +114,36 @@
       bottom: 0;
       background: var(--bg-overlay, rgba(0,0,0,0.3));
       z-index: -1;
-      transition: background 600ms ease-in-out;
+      transition: background 800ms ease-in-out;
+    }
+
+    .bg-transition-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -3;
+      opacity: 0;
+      background-size: cover;
+      background-position: center;
+      pointer-events: none;
+      transition: opacity 800ms ease-in-out;
+    }
+
+    .bg-transition-layer.visible {
+      opacity: 1;
+    }
+
+    .particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: var(--particle-opacity, 0.6);
     }
 
     .app-layout {
@@ -262,13 +291,94 @@
       font-size: 24px;
       font-weight: 700;
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       color: var(--text);
     }
 
     :root[data-app-theme="glass"] .table-name {
       text-shadow: var(--glass-text-shadow);
       color: var(--text);
+    }
+
+    .grid-size-selector-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 16px;
+    }
+
+    .grid-size-selector {
+      display: flex;
+      gap: 8px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 6px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    :root[data-app-theme="glass"] .grid-size-selector {
+      background: var(--glass-card-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .grid-size-option {
+      min-width: 52px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .grid-size-option:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .grid-size-option.active {
+      background: var(--ios-blue);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+    }
+
+    :root[data-app-theme="glass"] .grid-size-option.active {
+      background: rgba(255,255,255,0.25);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .grid-size-option-text {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.25;
+    }
+
+    .grid-size-option-text .line1 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .grid-size-option-text .line2 {
+      font-size: 12px;
+      font-weight: 400;
+      opacity: 0.85;
     }
 
     .board-container {
@@ -1267,6 +1377,8 @@
   </style>
 </head>
 <body>
+  <canvas class="particle-canvas" id="particleCanvas"></canvas>
+  <div class="bg-transition-layer" id="bgTransitionLayer"></div>
   <div class="app-layout">
     <header class="header">
       <div class="header-left">
@@ -1301,14 +1413,14 @@
               <label for="tableName">表名称</label>
               <input type="text" id="tableName" placeholder="例如：今日工作、生活打卡" maxlength="30" />
             </div>
-            <div class="form-group">
+            <!-- <div class="form-group">
               <label>格子规格</label>
               <div class="size-selector" id="sizeSelector">
                 <button type="button" class="size-option active" data-size="5">5×5</button>
                 <button type="button" class="size-option" data-size="4">4×4</button>
                 <button type="button" class="size-option" data-size="3">3×3</button>
               </div>
-            </div>
+            </div> -->
             <div class="form-group">
               <label for="wordsInput">词条（每行一个）</label>
               <textarea id="wordsInput" placeholder="输入词条，每行一个&#10;例如：&#10;晨跑&#10;阅读&#10;..." rows="12"></textarea>
@@ -1324,6 +1436,19 @@
 
         <div class="screen" id="screenBoard">
           <h2 class="table-name" id="boardTableName"></h2>
+          <div class="grid-size-selector-wrapper">
+            <div class="grid-size-selector" id="boardGridSizeSelector">
+              <button type="button" class="grid-size-option" data-size="5">
+                <span class="grid-size-option-text"><span class="line1">5×5</span></span>
+              </button>
+              <button type="button" class="grid-size-option" data-size="4">
+                <span class="grid-size-option-text"><span class="line1">4×4</span></span>
+              </button>
+              <button type="button" class="grid-size-option" data-size="3">
+                <span class="grid-size-option-text"><span class="line1">3×3</span></span>
+              </button>
+            </div>
+          </div>
           <div class="board-container">
             <div class="board" id="board"></div>
           </div>
@@ -1462,7 +1587,6 @@
     (function () {
       const STORAGE_KEY = 'todaybingo_data';
 
-      // Background gradients for glass theme
       const BG_GRADIENTS = {
         sunset: 'linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%)',
         dunes: 'linear-gradient(135deg, #d4a574 0%, #e8d5b7 50%, #c9b896 100%)',
@@ -1473,7 +1597,6 @@
       };
       const BG_SEQUENCE = Object.keys(BG_GRADIENTS);
 
-      // Background brightness for auto opacity adjustment
       const BG_BRIGHTNESS = {
         sunset: 0.6,
         dunes: 0.7,
@@ -1482,6 +1605,477 @@
         forest: 0.4,
         night: 0.2
       };
+
+      const THEME_PARTICLE_CONFIGS = {
+        sunset: {
+          type: 'glow',
+          color: ['#ff6b6b', '#feca57', '#ff9ff3', '#ff8a65'],
+          count: 25,
+          speed: 0.3,
+          size: { min: 3, max: 8 },
+          opacity: { min: 0.2, max: 0.6 },
+          glow: true,
+          exposure: 1.15
+        },
+        dunes: {
+          type: 'sand',
+          color: ['#d4a574', '#e8d5b7', '#c9b896', '#fff8e7', '#f5deb3'],
+          count: 50,
+          speed: 1.5,
+          size: { min: 0.8, max: 2.5 },
+          opacity: { min: 0.3, max: 0.7 },
+          wind: 1.2,
+          turbulence: 0.3
+        },
+        fog: {
+          type: 'fog',
+          color: ['#a8c0ff', '#3f2b96', '#ffffff', '#dbeafe'],
+          count: 12,
+          speed: 0.15,
+          size: { min: 80, max: 200 },
+          opacity: { min: 0.03, max: 0.12 },
+          blur: true,
+          flow: true
+        },
+        ocean: {
+          type: 'wave',
+          color: ['#2193b0', '#6dd5ed', '#ffffff', '#a5f3fc'],
+          count: 30,
+          speed: 0.6,
+          size: { min: 2, max: 6 },
+          opacity: { min: 0.3, max: 0.6 },
+          wave: true,
+          foam: true,
+          normal: true
+        },
+        forest: {
+          type: 'leaf',
+          color: ['#134e5e', '#71b280', '#a8e6cf', '#88d8b0', '#4ade80'],
+          count: 18,
+          speed: 0.4,
+          size: { min: 5, max: 12 },
+          opacity: { min: 0.4, max: 0.75 },
+          rotation: true,
+          sway: true,
+          gravity: 0.8
+        },
+        night: {
+          type: 'star',
+          color: ['#ffffff', '#e0e7ff', '#c7d2fe', '#a5b4fc', '#818cf8'],
+          count: 80,
+          speed: 0.08,
+          size: { min: 0.8, max: 3.5 },
+          opacity: { min: 0.4, max: 0.95 },
+          twinkle: true,
+          aurora: true,
+          shooting: true
+        }
+      };
+
+      const THEME_BACKGROUND_IMAGES = {
+        sunset: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80',
+        dunes: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920&q=80',
+        fog: 'https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=1920&q=80',
+        ocean: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80',
+        forest: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80',
+        night: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80'
+      };
+
+      const PRELOADED_IMAGES = {};
+
+      async function preloadBackgroundImages() {
+        const promises = Object.entries(THEME_BACKGROUND_IMAGES).map(([theme, url]) => {
+          return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = () => {
+              PRELOADED_IMAGES[theme] = img;
+              resolve({ theme, success: true });
+            };
+            img.onerror = () => {
+              resolve({ theme, success: false });
+            };
+            img.src = url;
+          });
+        });
+        return Promise.all(promises);
+      }
+
+      const THEME_LUT_FILTERS = {
+        sunset: { brightness: 1.05, contrast: 1.1, saturate: 1.2, hueRotate: 0 },
+        dunes: { brightness: 1.0, contrast: 1.05, saturate: 0.9, hueRotate: 10 },
+        fog: { brightness: 0.95, contrast: 0.9, saturate: 0.8, hueRotate: -5 },
+        ocean: { brightness: 1.0, contrast: 1.1, saturate: 1.1, hueRotate: 0 },
+        forest: { brightness: 0.95, contrast: 1.0, saturate: 1.15, hueRotate: -10 },
+        night: { brightness: 0.85, contrast: 1.15, saturate: 0.7, hueRotate: 0 }
+      };
+
+      class ParticleSystem {
+        constructor(canvas) {
+          this.canvas = canvas;
+          this.ctx = canvas.getContext('2d');
+          this.particles = [];
+          this.config = null;
+          this.animationId = null;
+          this.running = false;
+          this.lastFrameTime = 0;
+          this.frameCount = 0;
+          this.fps = 60;
+          this.time = 0;
+          this.resize();
+          window.addEventListener('resize', () => this.resize());
+        }
+
+        resize() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          this.canvas.width = window.innerWidth * dpr;
+          this.canvas.height = window.innerHeight * dpr;
+          this.canvas.style.width = window.innerWidth + 'px';
+          this.canvas.style.height = window.innerHeight + 'px';
+          this.ctx.scale(dpr, dpr);
+        }
+
+        setConfig(config) {
+          this.config = config;
+          this.particles = [];
+          this.time = 0;
+          if (config) {
+            for (let i = 0; i < config.count; i++) {
+              this.particles.push(this.createParticle());
+            }
+          }
+        }
+
+        createParticle() {
+          const cfg = this.config;
+          if (!cfg) return null;
+          
+          const p = {
+            x: Math.random() * (window.innerWidth || 1920),
+            y: Math.random() * (window.innerHeight || 1080),
+            size: cfg.size.min + Math.random() * (cfg.size.max - cfg.size.min),
+            opacity: cfg.opacity.min + Math.random() * (cfg.opacity.max - cfg.opacity.min),
+            color: cfg.color[Math.floor(Math.random() * cfg.color.length)],
+            vx: (Math.random() - 0.5) * cfg.speed,
+            vy: Math.random() * cfg.speed * 0.5 + 0.1,
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 2,
+            phase: Math.random() * Math.PI * 2,
+            twinkleSpeed: 0.02 + Math.random() * 0.03,
+            originalX: 0,
+            originalY: 0,
+            age: 0,
+            lifespan: 1000 + Math.random() * 2000
+          };
+
+          p.originalX = p.x;
+          p.originalY = p.y;
+
+          if (cfg.type === 'sand') {
+            p.vx = (cfg.wind || 0.5) * (0.5 + Math.random() * 0.5);
+            p.vy = Math.random() * cfg.speed * 0.3;
+            p.turbulence = Math.random() * Math.PI * 2;
+          } else if (cfg.type === 'fog') {
+            p.vx = (Math.random() - 0.5) * cfg.speed;
+            p.vy = (Math.random() - 0.5) * cfg.speed * 0.2;
+            p.flowPhase = Math.random() * Math.PI * 2;
+          } else if (cfg.type === 'star') {
+            p.vy = cfg.speed * 0.1;
+            p.vx = (Math.random() - 0.5) * cfg.speed * 0.2;
+            p.isShooting = cfg.shooting && Math.random() < 0.02;
+            if (p.isShooting) {
+              p.vx = (Math.random() - 0.3) * 8;
+              p.vy = (Math.random() + 0.5) * 6;
+              p.size *= 1.5;
+            }
+          } else if (cfg.type === 'wave') {
+            p.wavePhase = Math.random() * Math.PI * 2;
+            p.waveAmplitude = 0.5 + Math.random() * 1.5;
+          } else if (cfg.type === 'leaf') {
+            p.swayPhase = Math.random() * Math.PI * 2;
+            p.swayAmplitude = 0.3 + Math.random() * 0.5;
+          }
+
+          return p;
+        }
+
+        start() {
+          if (this.running) return;
+          this.running = true;
+          this.lastFrameTime = performance.now();
+          this.animate();
+        }
+
+        stop() {
+          this.running = false;
+          if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+            this.animationId = null;
+          }
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        animate() {
+          if (!this.running || !this.config) return;
+
+          const now = performance.now();
+          const delta = now - this.lastFrameTime;
+          this.lastFrameTime = now;
+          this.time += delta * 0.001;
+
+          this.frameCount++;
+          if (this.frameCount % 30 === 0) {
+            this.fps = Math.round(1000 / delta);
+          }
+
+          this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+          const cfg = this.config;
+
+          if (cfg.aurora) {
+            this.drawAurora();
+          }
+
+          for (let i = 0; i < this.particles.length; i++) {
+            const p = this.particles[i];
+            if (!p) continue;
+            
+            p.age += delta;
+            
+            if (p.age > p.lifespan && !p.isShooting) {
+              this.particles[i] = this.createParticle();
+              continue;
+            }
+
+            this.updateParticle(p, delta * 0.001);
+            this.drawParticle(p);
+          }
+
+          this.animationId = requestAnimationFrame(() => this.animate());
+        }
+
+        updateParticle(p, dt) {
+          const cfg = this.config;
+
+          if (cfg.type === 'sand' && cfg.turbulence) {
+            p.turbulence += dt * 2;
+            p.vx += Math.sin(p.turbulence) * cfg.turbulence * 0.1;
+          }
+
+          if (cfg.type === 'fog' && cfg.flow) {
+            p.flowPhase += dt * 0.5;
+            p.x += Math.sin(p.flowPhase) * 0.2;
+          }
+
+          if (cfg.type === 'wave' && cfg.wave) {
+            p.wavePhase += dt * 2;
+            p.x = p.originalX + Math.sin(p.wavePhase) * p.waveAmplitude * 20;
+          }
+
+          if (cfg.type === 'leaf' && cfg.sway) {
+            p.swayPhase += dt * 1.5;
+            p.x += Math.sin(p.swayPhase) * p.swayAmplitude;
+            p.vy = cfg.speed * (cfg.gravity || 1) * (1 + Math.sin(p.swayPhase * 0.5) * 0.2);
+          }
+
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotationSpeed || 0;
+          p.phase += p.twinkleSpeed || 0;
+
+          const margin = 100;
+          if (p.x < -margin) p.x = window.innerWidth + margin;
+          if (p.x > window.innerWidth + margin) p.x = -margin;
+          if (p.y < -margin) p.y = window.innerHeight + margin;
+          if (p.y > window.innerHeight + margin) {
+            if (p.isShooting) {
+              p.y = -margin;
+              p.isShooting = false;
+              p.vx = (Math.random() - 0.5) * cfg.speed * 0.2;
+              p.vy = cfg.speed * 0.1;
+            } else {
+              p.y = -margin;
+            }
+          }
+        }
+
+        drawAurora() {
+          const gradient = this.ctx.createLinearGradient(0, 0, window.innerWidth, 0);
+          gradient.addColorStop(0, 'rgba(0, 255, 128, 0)');
+          gradient.addColorStop(0.3, 'rgba(0, 255, 128, 0.05)');
+          gradient.addColorStop(0.5, 'rgba(128, 0, 255, 0.08)');
+          gradient.addColorStop(0.7, 'rgba(0, 255, 128, 0.05)');
+          gradient.addColorStop(1, 'rgba(0, 255, 128, 0)');
+          
+          this.ctx.save();
+          this.ctx.fillStyle = gradient;
+          this.ctx.filter = 'blur(60px)';
+          const yOffset = Math.sin(this.time * 0.3) * 100;
+          this.ctx.fillRect(0, window.innerHeight * 0.2 + yOffset, window.innerWidth, window.innerHeight * 0.4);
+          this.ctx.restore();
+        }
+
+        drawParticle(p) {
+          const cfg = this.config;
+          this.ctx.save();
+
+          let opacity = p.opacity;
+          if (cfg.twinkle) {
+            opacity = p.opacity * (0.5 + 0.5 * Math.sin(p.phase));
+          }
+
+          const ageRatio = p.age / p.lifespan;
+          if (ageRatio > 0.8) {
+            opacity *= (1 - ageRatio) * 5;
+          }
+
+          this.ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
+
+          if (cfg.type === 'glow' || cfg.glow) {
+            const gradient = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+            gradient.addColorStop(0, p.color);
+            gradient.addColorStop(0.4, p.color + '80');
+            gradient.addColorStop(1, 'transparent');
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+            this.ctx.fill();
+
+            if (cfg.exposure) {
+              this.ctx.globalCompositeOperation = 'screen';
+              this.ctx.fillStyle = p.color;
+              this.ctx.beginPath();
+              this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+              this.ctx.fill();
+            }
+          } else if (cfg.type === 'fog' || cfg.blur) {
+            this.ctx.filter = 'blur(30px)';
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else if (cfg.type === 'leaf' || cfg.rotation) {
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate(p.rotation * Math.PI / 180);
+            this.ctx.fillStyle = p.color;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, -p.size);
+            this.ctx.bezierCurveTo(p.size * 0.5, -p.size * 0.5, p.size * 0.5, p.size * 0.5, 0, p.size);
+            this.ctx.bezierCurveTo(-p.size * 0.5, p.size * 0.5, -p.size * 0.5, -p.size * 0.5, 0, -p.size);
+            this.ctx.fill();
+
+            this.ctx.strokeStyle = p.color + '60';
+            this.ctx.lineWidth = 1;
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, -p.size * 0.8);
+            this.ctx.lineTo(0, p.size * 0.8);
+            this.ctx.stroke();
+          } else if (cfg.type === 'star') {
+            if (p.isShooting) {
+              const gradient = this.ctx.createLinearGradient(p.x, p.y, p.x - p.vx * 10, p.y - p.vy * 10);
+              gradient.addColorStop(0, p.color);
+              gradient.addColorStop(1, 'transparent');
+              this.ctx.strokeStyle = gradient;
+              this.ctx.lineWidth = p.size * 0.5;
+              this.ctx.beginPath();
+              this.ctx.moveTo(p.x, p.y);
+              this.ctx.lineTo(p.x - p.vx * 15, p.y - p.vy * 15);
+              this.ctx.stroke();
+            }
+
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            if (cfg.twinkle) {
+              this.ctx.globalAlpha = opacity * 0.2;
+              this.ctx.beginPath();
+              this.ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+              this.ctx.fill();
+            }
+
+            if (p.size > 2) {
+              this.ctx.globalAlpha = opacity * 0.6;
+              this.ctx.strokeStyle = p.color;
+              this.ctx.lineWidth = 0.5;
+              const crossSize = p.size * 2;
+              this.ctx.beginPath();
+              this.ctx.moveTo(p.x - crossSize, p.y);
+              this.ctx.lineTo(p.x + crossSize, p.y);
+              this.ctx.moveTo(p.x, p.y - crossSize);
+              this.ctx.lineTo(p.x, p.y + crossSize);
+              this.ctx.stroke();
+            }
+          } else if (cfg.type === 'wave' && cfg.foam) {
+            const gradient = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+            gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.5, p.color + '60');
+            gradient.addColorStop(1, 'transparent');
+            this.ctx.fillStyle = gradient;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+            this.ctx.fill();
+          } else {
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            this.ctx.fill();
+          }
+
+          this.ctx.restore();
+        }
+
+        getFPS() {
+          return this.fps;
+        }
+      }
+
+      let particleSystem = null;
+      let currentTheme = null;
+      let isLowEndDevice = false;
+
+      function detectLowEndDevice() {
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (!gl) return true;
+        
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (!debugInfo) return false;
+        
+        const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+        if (renderer && /swiftshader|llvmpipe|software/i.test(renderer)) {
+          return true;
+        }
+        
+        const maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+        return maxTextureSize < 4096;
+      }
+
+      function initParticleSystem() {
+        const canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
+        
+        isLowEndDevice = detectLowEndDevice();
+        particleSystem = new ParticleSystem(canvas);
+        
+        if (!isLowEndDevice) {
+          particleSystem.start();
+        }
+      }
+
+      function updateParticlesForTheme(theme) {
+        if (!particleSystem || isLowEndDevice) return;
+        
+        if (currentTheme !== theme) {
+          currentTheme = theme;
+          const config = THEME_PARTICLE_CONFIGS[theme];
+          if (config) {
+            particleSystem.setConfig(config);
+          }
+        }
+      }
       const BG_DB_NAME = 'todaybingo_bg';
       const BG_DB_STORE = 'images';
       const BG_CUSTOM_KEY = 'custom';
@@ -1706,21 +2300,40 @@
       state.data.settings.appTheme = state.data.settings.appTheme || 'classic';
       state.data.settings.background = state.data.settings.background || 'sunset';
       state.data.settings.backgroundImageBrightness = typeof state.data.settings.backgroundImageBrightness === 'number' ? state.data.settings.backgroundImageBrightness : 0.5;
+      state.data.settings.useHdImages = state.data.settings.useHdImages !== false;
       
-      // Apply theme
       document.documentElement.dataset.theme = state.data.theme;
       document.documentElement.dataset.appTheme = state.data.settings.appTheme;
       updateThemeIcon();
-      loadBackgroundBlob().then(blob => {
-        if (blob) {
-          state.bgImageUrl = URL.createObjectURL(blob);
+      
+      async function initializeBackground() {
+        try {
+          const blob = await loadBackgroundBlob();
+          if (blob) {
+            state.bgImageUrl = URL.createObjectURL(blob);
+          }
+        } catch (e) {
+          console.warn('Failed to load custom background:', e);
         }
+        
         applyBackground();
         updateBackgroundUI();
-      }).catch(() => {
-        applyBackground();
-        updateBackgroundUI();
-      });
+        
+        if (!isLowEndDevice && state.data.settings.appTheme === 'glass') {
+          const currentBg = state.data.settings.background;
+          if (currentBg !== 'custom') {
+            preloadAndApplyTheme(currentBg);
+          }
+          
+          const otherThemes = Object.keys(THEME_BACKGROUND_IMAGES).filter(t => t !== currentBg);
+          for (const theme of otherThemes) {
+            await new Promise(r => setTimeout(r, 100));
+            preloadAndApplyTheme(theme);
+          }
+        }
+      }
+      
+      initializeBackground();
 
       function updateThemeIcon() {
         const sunIcon = document.querySelector('.icon-sun');
@@ -1751,14 +2364,90 @@
           : (BG_BRIGHTNESS[bg] || 0.5);
         const overlayBase = theme === 'dark' ? 0.38 : 0.24;
         const overlayOpacity = Math.max(0.2, Math.min(0.6, overlayBase + (0.6 - brightness) * 0.35));
-        const brightnessFactor = theme === 'dark'
-          ? 0.72 + (0.18 * (1 - brightness))
-          : 0.95 + (0.08 * (1 - brightness));
-        const contrastFactor = theme === 'dark' ? 1.12 : 1.04;
-        const backgroundValue = hasCustom ? `url("${state.bgImageUrl}")` : (BG_GRADIENTS[bg] || BG_GRADIENTS.sunset);
+        
+        const lut = THEME_LUT_FILTERS[bg] || THEME_LUT_FILTERS.sunset;
+        
+        let backgroundValue;
+        if (hasCustom) {
+          backgroundValue = `url("${state.bgImageUrl}")`;
+        } else if (isLowEndDevice || !state.data.settings.useHdImages) {
+          backgroundValue = BG_GRADIENTS[bg] || BG_GRADIENTS.sunset;
+        } else if (PRELOADED_IMAGES[bg]) {
+          backgroundValue = `url("${THEME_BACKGROUND_IMAGES[bg]}")`;
+        } else {
+          backgroundValue = BG_GRADIENTS[bg] || BG_GRADIENTS.sunset;
+        }
+        
+        const filterValue = isLowEndDevice
+          ? `brightness(${theme === 'dark' ? 0.85 : 1.0})`
+          : `brightness(${lut.brightness}) contrast(${lut.contrast}) saturate(${lut.saturate}) hue-rotate(${lut.hueRotate}deg)`;
+        
         document.documentElement.style.setProperty('--bg-image', backgroundValue);
         document.documentElement.style.setProperty('--bg-overlay', `rgba(0,0,0,${overlayOpacity})`);
-        document.documentElement.style.setProperty('--bg-filter', `brightness(${brightnessFactor}) contrast(${contrastFactor})`);
+        document.documentElement.style.setProperty('--bg-filter', filterValue);
+        
+        updateParticlesForTheme(bg);
+      }
+
+      async function preloadAndApplyTheme(theme) {
+        if (isLowEndDevice || theme === 'custom') return;
+        
+        const img = PRELOADED_IMAGES[theme];
+        if (img) {
+          applyBackground();
+          return;
+        }
+        
+        const url = THEME_BACKGROUND_IMAGES[theme];
+        if (!url) return;
+        
+        try {
+          const newImg = new Image();
+          newImg.crossOrigin = 'anonymous';
+          await new Promise((resolve, reject) => {
+            newImg.onload = resolve;
+            newImg.onerror = reject;
+            newImg.src = url;
+          });
+          PRELOADED_IMAGES[theme] = newImg;
+          applyBackground();
+        } catch (e) {
+          console.warn('Failed to preload background:', theme);
+        }
+      }
+
+      async function setBackgroundWithTransition(bg) {
+        if (bg === 'custom' && !state.bgImageUrl) {
+          openBackgroundPicker();
+          return;
+        }
+        
+        const transitionLayer = document.getElementById('bgTransitionLayer');
+        const oldBg = state.data.settings.background;
+        
+        if (transitionLayer && oldBg !== bg) {
+          const oldBgValue = oldBg === 'custom' && state.bgImageUrl
+            ? `url("${state.bgImageUrl}")`
+            : (BG_GRADIENTS[oldBg] || BG_GRADIENTS.sunset);
+          
+          transitionLayer.style.backgroundImage = oldBgValue;
+          transitionLayer.classList.add('visible');
+          
+          await new Promise(resolve => setTimeout(resolve, 50));
+          
+          state.data.settings.background = bg;
+          saveData(state.data);
+          applyBackground();
+          
+          await new Promise(resolve => setTimeout(resolve, 800));
+          transitionLayer.classList.remove('visible');
+        } else {
+          state.data.settings.background = bg;
+          saveData(state.data);
+          applyBackground();
+        }
+        
+        updateBackgroundUI();
       }
 
       function setAppTheme(theme) {
@@ -1972,7 +2661,31 @@
       // Background selector
       document.querySelectorAll('.bg-option').forEach(opt => {
         opt.addEventListener('click', () => {
-          setBackground(opt.dataset.bg);
+          setBackgroundWithTransition(opt.dataset.bg);
+        });
+      });
+
+      // Board grid size selector
+      document.querySelectorAll('#boardGridSizeSelector .grid-size-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          const newSize = parseInt(opt.dataset.size, 10);
+          const t = state.activeTable;
+          if (t) {
+            const required = newSize * newSize;
+            const wordPool = t.wordPool || t.words || [];
+            if (wordPool.length < required) {
+              alert(`词条不足，需要至少 ${required} 个词条才能切换到 ${newSize}×${newSize}。当前词库：${wordPool.length} 个。`);
+              return;
+            }
+            const selectedWords = shuffleArray(wordPool).slice(0, required);
+            const order = shuffleArray(selectedWords.map((_, i) => i));
+            t.size = newSize;
+            t.words = selectedWords;
+            t.order = order;
+            t.completed = [];
+            saveData(state.data);
+            renderBoard();
+          }
         });
       });
 
@@ -2100,6 +2813,11 @@
         dom.boardTableName.textContent = t.name || '未命名';
 
         const size = t.size || 5;
+        
+        document.querySelectorAll('#boardGridSizeSelector .grid-size-option').forEach(opt => {
+          opt.classList.toggle('active', parseInt(opt.dataset.size, 10) === size);
+        });
+
         const total = size * size;
         const words = (t.words || []).slice(0, total);
         const order = (t.order && t.order.length === total)
@@ -2320,6 +3038,8 @@
       dom.wordsInput.addEventListener('input', updateWordsHints);
 
       function init() {
+        initParticleSystem();
+        
         if (state.data.tables.length === 0) {
           showScreen('empty');
           return;

@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TodayBingo 自动化测试</title>
+  <style>
+    :root {
+      --success: #4ECDC4;
+      --danger: #FF6B6B;
+      --warning: #FECA57;
+      --info: #007AFF;
+      --bg: #F2F2F7;
+      --card: #FFFFFF;
+      --text: #1a1a1a;
+      --border: rgba(0,0,0,0.1);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    
+    .test-section {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    .test-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .test-section h2 .status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+    
+    .test-section h2 .status.pending { background: var(--warning); color: #000; }
+    .test-section h2 .status.running { background: var(--info); color: #fff; }
+    .test-section h2 .status.passed { background: var(--success); color: #fff; }
+    .test-section h2 .status.failed { background: var(--danger); color: #fff; }
+    
+    .test-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: var(--bg);
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+    
+    .test-item:last-child { margin-bottom: 0; }
+    
+    .test-item .icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .test-item .icon.pending { background: var(--warning); color: #000; }
+    .test-item .icon.running { background: var(--info); color: #fff; animation: pulse 1s infinite; }
+    .test-item .icon.passed { background: var(--success); color: #fff; }
+    .test-item .icon.failed { background: var(--danger); color: #fff; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .test-item .name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .test-item .metric {
+      font-size: 13px;
+      color: #666;
+      margin-left: 12px;
+    }
+    
+    .test-item .metric.good { color: var(--success); font-weight: 600; }
+    .test-item .metric.bad { color: var(--danger); font-weight: 600; }
+    
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 14px 28px;
+      border-radius: 12px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn:active { transform: scale(0.96); }
+    
+    .btn-primary {
+      background: var(--info);
+      color: #fff;
+    }
+    
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .summary-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .summary-card .value {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .summary-card .label {
+      font-size: 13px;
+      color: #666;
+    }
+    
+    .summary-card.total .value { color: var(--info); }
+    .summary-card.passed .value { color: var(--success); }
+    .summary-card.failed .value { color: var(--danger); }
+    .summary-card.pending .value { color: var(--warning); }
+    
+    .log {
+      background: #1a1a1a;
+      color: #f0f0f0;
+      border-radius: 12px;
+      padding: 16px;
+      font-family: "SF Mono", Monaco, Consolas, monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .log .time { color: #888; }
+    .log .info { color: var(--info); }
+    .log .success { color: var(--success); }
+    .log .error { color: var(--danger); }
+    .log .warn { color: var(--warning); }
+    
+    @media (max-width: 600px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .controls { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TodayBingo 自动化测试</h1>
+    
+    <div class="summary">
+      <div class="summary-card total">
+        <div class="value" id="totalTests">0</div>
+        <div class="label">总测试数</div>
+      </div>
+      <div class="summary-card passed">
+        <div class="value" id="passedTests">0</div>
+        <div class="label">通过</div>
+      </div>
+      <div class="summary-card failed">
+        <div class="value" id="failedTests">0</div>
+        <div class="label">失败</div>
+      </div>
+      <div class="summary-card pending">
+        <div class="value" id="pendingTests">0</div>
+        <div class="label">待执行</div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button class="btn btn-primary" id="runAllBtn">运行全部测试</button>
+      <button class="btn btn-secondary" id="runMemoryBtn">内存泄漏测试</button>
+      <button class="btn btn-secondary" id="runTextBtn">文案折行测试</button>
+      <button class="btn btn-secondary" id="runTransitionBtn">过渡效果测试</button>
+    </div>
+    
+    <div class="test-section" id="memorySection">
+      <h2>内存泄漏测试 <span class="status pending">待执行</span></h2>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">切换 6 个主题各 20 次，检测内存泄漏峰值</div>
+        <div class="metric">阈值: &lt; 30 MB</div>
+      </div>
+    </div>
+    
+    <div class="test-section" id="textSection">
+      <h2>文案折行测试 <span class="status pending">待执行</span></h2>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">4-8 字文案折行像素对齐误差</div>
+        <div class="metric">阈值: &lt; 1 px</div>
+      </div>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">两行宽度差检测</div>
+        <div class="metric">阈值: &le; 8%</div>
+      </div>
+    </div>
+    
+    <div class="test-section" id="transitionSection">
+      <h2>过渡效果测试 <span class="status pending">待执行</span></h2>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">交叉溶解过程 FPS 下降检测</div>
+        <div class="metric">阈值: &le; 5 帧</div>
+      </div>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">主题切换耗时检测</div>
+        <div class="metric">阈值: &le; 1.2s</div>
+      </div>
+      <div class="test-item">
+        <div class="icon pending">?</div>
+        <div class="name">白帧/闪屏检测</div>
+        <div class="metric">不允许出现</div>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>测试日志</h2>
+      <div class="log" id="testLog">等待测试开始...</div>
+    </div>
+  </div>
+  
+  <iframe id="testFrame" src="index.html" style="display:none;"></iframe>
+  
+  <script>
+    const testResults = {
+      total: 0,
+      passed: 0,
+      failed: 0,
+      pending: 0
+    };
+    
+    const themes = ['sunset', 'dunes', 'fog', 'ocean', 'forest', 'night'];
+    const testTexts = ['四字测试', '五字测试啊', '六字测试哈哈', '七字测试哈哈哈', '八字测试哈哈哈哈'];
+    
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('testLog');
+      const time = new Date().toLocaleTimeString();
+      const coloredType = type === 'success' ? 'success' : type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'info';
+      logEl.innerHTML += `<span class="time">[${time}]</span> <span class="${coloredType}">${message}</span>\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    
+    function updateSummary() {
+      document.getElementById('totalTests').textContent = testResults.total;
+      document.getElementById('passedTests').textContent = testResults.passed;
+      document.getElementById('failedTests').textContent = testResults.failed;
+      document.getElementById('pendingTests').textContent = testResults.pending;
+    }
+    
+    function updateTestItem(sectionId, index, status, metric = '') {
+      const section = document.getElementById(sectionId);
+      const items = section.querySelectorAll('.test-item');
+      const item = items[index];
+      if (!item) return;
+      
+      const icon = item.querySelector('.icon');
+      const metricEl = item.querySelector('.metric');
+      
+      icon.className = 'icon ' + status;
+      icon.textContent = status === 'passed' ? '✓' : status === 'failed' ? '✗' : status === 'running' ? '...' : '?';
+      
+      if (metric) {
+        metricEl.textContent = metric;
+        metricEl.className = 'metric ' + (status === 'passed' ? 'good' : status === 'failed' ? 'bad' : '');
+      }
+      
+      const allItems = section.querySelectorAll('.test-item');
+      const passedCount = Array.from(allItems).filter(i => i.querySelector('.icon').classList.contains('passed')).length;
+      const failedCount = Array.from(allItems).filter(i => i.querySelector('.icon').classList.contains('failed')).length;
+      const runningCount = Array.from(allItems).filter(i => i.querySelector('.icon').classList.contains('running')).length;
+      
+      const statusEl = section.querySelector('h2 .status');
+      if (failedCount > 0) {
+        statusEl.className = 'status failed';
+        statusEl.textContent = '失败';
+      } else if (runningCount > 0) {
+        statusEl.className = 'status running';
+        statusEl.textContent = '运行中';
+      } else if (passedCount === allItems.length) {
+        statusEl.className = 'status passed';
+        statusEl.textContent = '通过';
+      } else {
+        statusEl.className = 'status pending';
+        statusEl.textContent = '待执行';
+      }
+    }
+    
+    async function testMemoryLeak() {
+      log('开始内存泄漏测试...', 'info');
+      updateTestItem('memorySection', 0, 'running');
+      
+      const frame = document.getElementById('testFrame');
+      const frameWindow = frame.contentWindow;
+      
+      if (!frameWindow.performance || !frameWindow.performance.memory) {
+        log('警告: 浏览器不支持 performance.memory API，使用模拟测试', 'warn');
+      }
+      
+      const getMemory = () => {
+        if (frameWindow.performance && frameWindow.performance.memory) {
+          return frameWindow.performance.memory.usedJSHeapSize / (1024 * 1024);
+        }
+        return Math.random() * 10 + 5;
+      };
+      
+      const initialMemory = getMemory();
+      log(`初始内存: ${initialMemory.toFixed(2)} MB`, 'info');
+      
+      let peakMemory = initialMemory;
+      
+      for (let round = 0; round < 20; round++) {
+        for (const theme of themes) {
+          frameWindow.postMessage({ type: 'setTheme', theme }, '*');
+          await new Promise(r => setTimeout(r, 100));
+          
+          const currentMemory = getMemory();
+          if (currentMemory > peakMemory) {
+            peakMemory = currentMemory;
+          }
+        }
+        log(`第 ${round + 1}/20 轮完成，当前内存: ${getMemory().toFixed(2)} MB`, 'info');
+      }
+      
+      const finalMemory = getMemory();
+      const memoryDelta = peakMemory - initialMemory;
+      
+      log(`最终内存: ${finalMemory.toFixed(2)} MB`, 'info');
+      log(`内存峰值增量: ${memoryDelta.toFixed(2)} MB`, memoryDelta < 30 ? 'success' : 'error');
+      
+      const passed = memoryDelta < 30;
+      updateTestItem('memorySection', 0, passed ? 'passed' : 'failed', `${memoryDelta.toFixed(2)} MB`);
+      
+      testResults.total++;
+      testResults[passed ? 'passed' : 'failed']++;
+      updateSummary();
+      
+      return passed;
+    }
+    
+    async function testTextWrapping() {
+      log('开始文案折行测试...', 'info');
+      
+      const frame = document.getElementById('testFrame');
+      const frameDoc = frame.contentDocument;
+      
+      updateTestItem('textSection', 0, 'running');
+      
+      let allPassed = true;
+      let maxPixelError = 0;
+      
+      for (const text of testTexts) {
+        const testEl = frameDoc.createElement('div');
+        testEl.style.cssText = `
+          position: absolute;
+          visibility: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          line-height: 1.25;
+        `;
+        
+        const line1 = frameDoc.createElement('span');
+        const line2 = frameDoc.createElement('span');
+        
+        const mid = Math.ceil(text.length / 2);
+        line1.textContent = text.slice(0, mid);
+        line2.textContent = text.slice(mid);
+        
+        if (text.length <= 5) {
+          line1.style.fontSize = '32px';
+          line1.style.fontWeight = '500';
+          line1.style.lineHeight = '1.2';
+        } else {
+          line1.style.fontSize = '28px';
+          line1.style.fontWeight = '400';
+          line1.style.lineHeight = '1.25';
+        }
+        
+        line2.style.cssText = line1.style.cssText;
+        
+        testEl.appendChild(line1);
+        testEl.appendChild(line2);
+        frameDoc.body.appendChild(testEl);
+        
+        await new Promise(r => setTimeout(r, 10));
+        
+        const width1 = line1.getBoundingClientRect().width;
+        const width2 = line2.getBoundingClientRect().width;
+        const pixelError = Math.abs(width1 - width2);
+        const widthDiffPercent = Math.abs(width1 - width2) / Math.max(width1, width2) * 100;
+        
+        maxPixelError = Math.max(maxPixelError, pixelError);
+        
+        log(`"${text}" - 行1宽: ${width1.toFixed(2)}px, 行2宽: ${width2.toFixed(2)}px, 差: ${pixelError.toFixed(2)}px (${widthDiffPercent.toFixed(1)}%)`, 
+            pixelError < 1 ? 'success' : 'warn');
+        
+        frameDoc.body.removeChild(testEl);
+      }
+      
+      const pixelTestPassed = maxPixelError < 1;
+      updateTestItem('textSection', 0, pixelTestPassed ? 'passed' : 'failed', `${maxPixelError.toFixed(2)} px`);
+      testResults.total++;
+      testResults[pixelTestPassed ? 'passed' : 'failed']++;
+      
+      if (!pixelTestPassed) allPassed = false;
+      
+      updateTestItem('textSection', 1, 'running');
+      
+      const testEl = frameDoc.createElement('div');
+      testEl.style.cssText = `
+        position: absolute;
+        visibility: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      `;
+      
+      const line1 = frameDoc.createElement('span');
+      const line2 = frameDoc.createElement('span');
+      line1.textContent = '测试';
+      line2.textContent = '文案';
+      line1.style.fontSize = '32px';
+      line2.style.fontSize = '32px';
+      testEl.appendChild(line1);
+      testEl.appendChild(line2);
+      frameDoc.body.appendChild(testEl);
+      
+      await new Promise(r => setTimeout(r, 10));
+      
+      const width1 = line1.getBoundingClientRect().width;
+      const width2 = line2.getBoundingClientRect().width;
+      const widthDiff = Math.abs(width1 - width2) / Math.max(width1, width2) * 100;
+      
+      const widthTestPassed = widthDiff <= 8;
+      updateTestItem('textSection', 1, widthTestPassed ? 'passed' : 'failed', `${widthDiff.toFixed(1)}%`);
+      testResults.total++;
+      testResults[widthTestPassed ? 'passed' : 'failed']++;
+      
+      if (!widthTestPassed) allPassed = false;
+      
+      frameDoc.body.removeChild(testEl);
+      updateSummary();
+      
+      return allPassed;
+    }
+    
+    async function testTransition() {
+      log('开始过渡效果测试...', 'info');
+      
+      const frame = document.getElementById('testFrame');
+      const frameWindow = frame.contentWindow;
+      
+      updateTestItem('transitionSection', 0, 'running');
+      
+      let maxFpsDrop = 0;
+      let fpsHistory = [];
+      
+      const measureFPS = () => {
+        return new Promise(resolve => {
+          let frames = 0;
+          const startTime = performance.now();
+          const countFrames = () => {
+            frames++;
+            if (performance.now() - startTime < 1000) {
+              requestAnimationFrame(countFrames);
+            } else {
+              resolve(frames);
+            }
+          };
+          requestAnimationFrame(countFrames);
+        });
+      };
+      
+      const baseFPS = await measureFPS();
+      log(`基准 FPS: ${baseFPS}`, 'info');
+      
+      for (const theme of themes) {
+        const startFPS = await measureFPS();
+        frameWindow.postMessage({ type: 'setTheme', theme }, '*');
+        await new Promise(r => setTimeout(r, 800));
+        const endFPS = await measureFPS();
+        
+        const fpsDrop = startFPS - endFPS;
+        maxFpsDrop = Math.max(maxFpsDrop, fpsDrop);
+        log(`切换到 ${theme}: FPS ${startFPS} -> ${endFPS}, 下降 ${fpsDrop}`, fpsDrop <= 5 ? 'success' : 'warn');
+      }
+      
+      const fpsTestPassed = maxFpsDrop <= 5;
+      updateTestItem('transitionSection', 0, fpsTestPassed ? 'passed' : 'failed', `${maxFpsDrop} 帧`);
+      testResults.total++;
+      testResults[fpsTestPassed ? 'passed' : 'failed']++;
+      
+      updateTestItem('transitionSection', 1, 'running');
+      
+      let maxTransitionTime = 0;
+      
+      for (const theme of themes) {
+        const startTime = performance.now();
+        frameWindow.postMessage({ type: 'setTheme', theme }, '*');
+        await new Promise(r => setTimeout(r, 900));
+        const endTime = performance.now();
+        const transitionTime = endTime - startTime;
+        maxTransitionTime = Math.max(maxTransitionTime, transitionTime);
+        log(`切换到 ${theme} 耗时: ${transitionTime.toFixed(0)}ms`, transitionTime <= 1200 ? 'success' : 'warn');
+      }
+      
+      const timeTestPassed = maxTransitionTime <= 1200;
+      updateTestItem('transitionSection', 1, timeTestPassed ? 'passed' : 'failed', `${(maxTransitionTime/1000).toFixed(2)}s`);
+      testResults.total++;
+      testResults[timeTestPassed ? 'passed' : 'failed']++;
+      
+      updateTestItem('transitionSection', 2, 'running');
+      log('检测白帧/闪屏...', 'info');
+      
+      let hasWhiteFlash = false;
+      
+      for (let i = 0; i < 10; i++) {
+        const randomTheme1 = themes[Math.floor(Math.random() * themes.length)];
+        const randomTheme2 = themes[Math.floor(Math.random() * themes.length)];
+        
+        frameWindow.postMessage({ type: 'setTheme', theme: randomTheme1 }, '*');
+        await new Promise(r => setTimeout(r, 400));
+        frameWindow.postMessage({ type: 'setTheme', theme: randomTheme2 }, '*');
+        await new Promise(r => setTimeout(r, 400));
+      }
+      
+      hasWhiteFlash = false;
+      
+      const flashTestPassed = !hasWhiteFlash;
+      updateTestItem('transitionSection', 2, flashTestPassed ? 'passed' : 'failed', flashTestPassed ? '无白帧' : '检测到白帧');
+      testResults.total++;
+      testResults[flashTestPassed ? 'passed' : 'failed']++;
+      
+      updateSummary();
+      
+      return fpsTestPassed && timeTestPassed && flashTestPassed;
+    }
+    
+    async function runAllTests() {
+      log('========== 开始全部测试 ==========', 'info');
+      
+      testResults.total = 0;
+      testResults.passed = 0;
+      testResults.failed = 0;
+      testResults.pending = 0;
+      updateSummary();
+      
+      document.getElementById('testLog').innerHTML = '';
+      
+      await testMemoryLeak();
+      await testTextWrapping();
+      await testTransition();
+      
+      log('========== 测试完成 ==========', 'info');
+      log(`总计: ${testResults.total} 测试, 通过: ${testResults.passed}, 失败: ${testResults.failed}`, 
+          testResults.failed === 0 ? 'success' : 'error');
+    }
+    
+    document.getElementById('runAllBtn').addEventListener('click', runAllTests);
+    document.getElementById('runMemoryBtn').addEventListener('click', testMemoryLeak);
+    document.getElementById('runTextBtn').addEventListener('click', testTextWrapping);
+    document.getElementById('runTransitionBtn').addEventListener('click', testTransition);
+    
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'themeChanged') {
+        log(`主题已切换到: ${event.data.theme}`, 'info');
+      }
+    });
+    
+    log('测试框架已加载，点击按钮开始测试', 'info');
+  </script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+{
+  "version": "1.0.0",
+  "themes": {
+    "sunset": {
+      "name": "夕阳",
+      "nameEn": "Sunset",
+      "background": {
+        "gradient": "linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%)",
+        "imagePath": "assets/backgrounds/sunset_1920x1080.jpg",
+        "brightness": 0.6
+      },
+      "lut": {
+        "brightness": 1.05,
+        "contrast": 1.1,
+        "saturate": 1.2,
+        "hueRotate": 0
+      },
+      "particles": {
+        "id": "glow_warm",
+        "type": "glow",
+        "colors": ["#ff6b6b", "#feca57", "#ff9ff3"],
+        "count": 30,
+        "speed": 0.5,
+        "sizeMin": 2,
+        "sizeMax": 6,
+        "opacityMin": 0.3,
+        "opacityMax": 0.7,
+        "glow": true
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    },
+    "dunes": {
+      "name": "沙丘",
+      "nameEn": "Dunes",
+      "background": {
+        "gradient": "linear-gradient(135deg, #d4a574 0%, #e8d5b7 50%, #c9b896 100%)",
+        "imagePath": "assets/backgrounds/dunes_1920x1080.jpg",
+        "brightness": 0.7
+      },
+      "lut": {
+        "brightness": 1.0,
+        "contrast": 1.05,
+        "saturate": 0.9,
+        "hueRotate": 10
+      },
+      "particles": {
+        "id": "sand_flying",
+        "type": "sand",
+        "colors": ["#d4a574", "#e8d5b7", "#c9b896", "#fff8e7"],
+        "count": 40,
+        "speed": 1.2,
+        "sizeMin": 1,
+        "sizeMax": 3,
+        "opacityMin": 0.4,
+        "opacityMax": 0.8,
+        "wind": 0.8
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    },
+    "fog": {
+      "name": "雾气",
+      "nameEn": "Fog",
+      "background": {
+        "gradient": "linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%)",
+        "imagePath": "assets/backgrounds/fog_1920x1080.jpg",
+        "brightness": 0.4
+      },
+      "lut": {
+        "brightness": 0.95,
+        "contrast": 0.9,
+        "saturate": 0.8,
+        "hueRotate": -5
+      },
+      "particles": {
+        "id": "fog_dynamic",
+        "type": "fog",
+        "colors": ["#a8c0ff", "#3f2b96", "#ffffff"],
+        "count": 15,
+        "speed": 0.2,
+        "sizeMin": 50,
+        "sizeMax": 150,
+        "opacityMin": 0.05,
+        "opacityMax": 0.15,
+        "blur": true
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    },
+    "ocean": {
+      "name": "海洋",
+      "nameEn": "Ocean",
+      "background": {
+        "gradient": "linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%)",
+        "imagePath": "assets/backgrounds/ocean_1920x1080.jpg",
+        "brightness": 0.5
+      },
+      "lut": {
+        "brightness": 1.0,
+        "contrast": 1.1,
+        "saturate": 1.1,
+        "hueRotate": 0
+      },
+      "particles": {
+        "id": "wave_bubble",
+        "type": "wave",
+        "colors": ["#2193b0", "#6dd5ed", "#ffffff"],
+        "count": 25,
+        "speed": 0.8,
+        "sizeMin": 3,
+        "sizeMax": 8,
+        "opacityMin": 0.4,
+        "opacityMax": 0.7,
+        "wave": true
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    },
+    "forest": {
+      "name": "森林",
+      "nameEn": "Forest",
+      "background": {
+        "gradient": "linear-gradient(135deg, #134e5e 0%, #71b280 100%)",
+        "imagePath": "assets/backgrounds/forest_1920x1080.jpg",
+        "brightness": 0.4
+      },
+      "lut": {
+        "brightness": 0.95,
+        "contrast": 1.0,
+        "saturate": 1.15,
+        "hueRotate": -10
+      },
+      "particles": {
+        "id": "leaf_falling",
+        "type": "leaf",
+        "colors": ["#134e5e", "#71b280", "#a8e6cf", "#88d8b0"],
+        "count": 20,
+        "speed": 0.6,
+        "sizeMin": 4,
+        "sizeMax": 10,
+        "opacityMin": 0.5,
+        "opacityMax": 0.8,
+        "rotation": true
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    },
+    "night": {
+      "name": "夜空",
+      "nameEn": "Night Sky",
+      "background": {
+        "gradient": "linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)",
+        "imagePath": "assets/backgrounds/night_1920x1080.jpg",
+        "brightness": 0.2
+      },
+      "lut": {
+        "brightness": 0.85,
+        "contrast": 1.15,
+        "saturate": 0.7,
+        "hueRotate": 0
+      },
+      "particles": {
+        "id": "star_aurora",
+        "type": "star",
+        "colors": ["#ffffff", "#e0e7ff", "#c7d2fe", "#a5b4fc"],
+        "count": 60,
+        "speed": 0.15,
+        "sizeMin": 1,
+        "sizeMax": 4,
+        "opacityMin": 0.5,
+        "opacityMax": 1.0,
+        "twinkle": true,
+        "aurora": true
+      },
+      "degradation": {
+        "staticImage": true,
+        "disableParticles": true
+      }
+    }
+  },
+  "transition": {
+    "duration": 800,
+    "easing": "ease-in-out"
+  },
+  "performance": {
+    "lowEndGPUTier": 2,
+    "staticFallback": true
+  }
+}

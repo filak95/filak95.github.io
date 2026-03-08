@@ -1187,7 +1187,10 @@ html, body {
 }
 
 .bg-option-gradient.fog {
-  background: linear-gradient(135deg, #a8c0ff 0%, #3f2b96 100%);
+  background: linear-gradient(135deg, rgba(168,192,255,0.25) 0%, rgba(63,43,150,0.25) 100%), url("fog.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .bg-option-gradient.ocean {
@@ -1199,7 +1202,10 @@ html, body {
 }
 
 .bg-option-gradient.night {
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+  background: linear-gradient(135deg, rgba(15,32,39,0.25) 0%, rgba(44,83,100,0.25) 100%), url("night.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .bg-option-label {

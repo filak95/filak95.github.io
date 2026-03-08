@@ -33,10 +33,10 @@
   const THEME_BACKGROUND_IMAGES = {
     sunset: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80',
     dunes: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920&q=80',
-    fog: 'https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=1920&q=80',
+    fog: 'fog.jpg',
     ocean: 'https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=1920&q=80',
     forest: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=1920&q=80',
-    night: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1920&q=80'
+    night: 'night.jpg'
   };
 
   const THEME_PARTICLE_CONFIGS = {

@@ -705,7 +705,6 @@
       if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
       runConfetti();
     }
-    advanceBackgroundTheme();
   }
 
   function renderBoard() {

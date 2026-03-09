@@ -16,11 +16,21 @@
   --success: #4ECDC4;
   --bg: #F2F2F7;
   --card-bg: rgba(255,255,255,0.85);
-  --text: #1a1a1a;
-  --text-secondary: #666;
+  --text-primary: rgba(26,26,26,0.87);
+  --text-secondary: rgba(26,26,26,0.60);
+  --text-disabled: rgba(26,26,26,0.38);
+  --text: var(--text-primary);
   --border: rgba(0,0,0,0.08);
   --shadow: 0 2px 12px rgba(0,0,0,0.08);
   --radius: 16px;
+  --pad-btn-x: 12px;
+  --pad-btn-y: 8px;
+  --pad-field-x: 16px;
+  --pad-field-y: 12px;
+  --pad-chip-x: 8px;
+  --pad-chip-y: 4px;
+  --pad-min-x: 10px;
+  --pad-min-y: 6px;
   --cell-opacity: 0.5;
   --app-theme: classic;
   
@@ -35,8 +45,10 @@
   --primary-light: rgba(93, 173, 226, 0.2);
   --bg: #1a1a1a;
   --card-bg: rgba(40,40,40,0.85);
-  --text: #f0f0f0;
-  --text-secondary: #aaa;
+  --text-primary: rgba(240,240,240,0.87);
+  --text-secondary: rgba(240,240,240,0.60);
+  --text-disabled: rgba(240,240,240,0.38);
+  --text: var(--text-primary);
   --border: rgba(255,255,255,0.1);
   --shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
@@ -47,8 +59,10 @@
     --primary-light: rgba(93, 173, 226, 0.2);
     --bg: #1a1a1a;
     --card-bg: rgba(40,40,40,0.85);
-    --text: #f0f0f0;
-    --text-secondary: #aaa;
+    --text-primary: rgba(240,240,240,0.87);
+    --text-secondary: rgba(240,240,240,0.60);
+    --text-disabled: rgba(240,240,240,0.38);
+    --text: var(--text-primary);
     --border: rgba(255,255,255,0.1);
     --shadow: 0 2px 12px rgba(0,0,0,0.3);
   }
@@ -159,7 +173,7 @@ html, body {
 }
 
 .header {
-  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  padding: calc(var(--safe-top) + var(--pad-field-y)) var(--pad-field-x) var(--pad-field-y);
   background: var(--card-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -278,7 +292,7 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 16px;
+  padding: var(--pad-field-x);
   padding-bottom: calc(80px + var(--safe-bottom));
 }
 
@@ -311,7 +325,7 @@ html, body {
   justify-content: center;
   align-items: center;
   margin-bottom: 16px;
-  padding: 0 16px;
+  padding: 0 var(--pad-field-x);
 }
 
 .grid-size-selector {
@@ -321,7 +335,7 @@ html, body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 14px;
-  padding: 6px;
+  padding: var(--pad-min-y);
   box-shadow: var(--shadow);
   border: 1px solid var(--border);
 }
@@ -336,7 +350,7 @@ html, body {
 
 .grid-size-option {
   min-width: 52px;
-  padding: 8px 12px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -415,7 +429,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: var(--pad-btn-y);
   border-radius: var(--radius);
   font-weight: 600;
   font-size: 13px;
@@ -495,7 +509,7 @@ html, body {
 }
 
 .btn-primary {
-  padding: 14px 28px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
@@ -521,7 +535,7 @@ html, body {
 }
 
 .create-screen {
-  padding: 20px 0;
+  padding: var(--pad-field-y) 0;
   max-width: 500px;
   margin: 0 auto;
   width: 100%;
@@ -547,7 +561,7 @@ html, body {
 .create-screen input[type="text"],
 .create-screen textarea {
   width: 100%;
-  padding: 14px 16px;
+  padding: var(--pad-field-y) var(--pad-field-x);
   border-radius: 12px;
   border: 1px solid var(--border);
   font-size: 16px;
@@ -557,6 +571,11 @@ html, body {
   -webkit-backdrop-filter: blur(20px);
   color: var(--text);
   transition: border-color 0.2s;
+}
+
+.create-screen input[type="text"]::placeholder,
+.create-screen textarea::placeholder {
+  color: var(--text-disabled);
 }
 
 :root[data-app-theme="glass"] .create-screen input[type="text"],
@@ -572,7 +591,7 @@ html, body {
 
 :root[data-app-theme="glass"] .create-screen input[type="text"]::placeholder,
 :root[data-app-theme="glass"] .create-screen textarea::placeholder {
-  color: var(--text-secondary);
+  color: var(--text-disabled);
 }
 
 .create-screen input[type="text"]:focus,
@@ -589,12 +608,12 @@ html, body {
 
 .create-screen .hint {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: var(--text-disabled);
   margin-top: 6px;
 }
 
 :root[data-app-theme="glass"] .create-screen .hint {
-  color: var(--text-secondary);
+  color: var(--text-disabled);
 }
 
 .create-screen .hint-char {
@@ -608,7 +627,7 @@ html, body {
 
 .size-option {
   flex: 1;
-  padding: 10px 12px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 12px;
   border: 2px solid var(--border);
   background: var(--card-bg);
@@ -642,7 +661,7 @@ html, body {
 }
 
 .btn-secondary {
-  padding: 14px 24px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
@@ -778,7 +797,7 @@ html, body {
 }
 
 .drawer-header {
-  padding: calc(var(--safe-top) + 16px) 16px 16px;
+  padding: calc(var(--safe-top) + var(--pad-field-y)) var(--pad-field-x) var(--pad-field-y);
   border-bottom: 1px solid var(--border);
 }
 
@@ -800,12 +819,12 @@ html, body {
 .drawer-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: var(--pad-btn-y);
 }
 
 .drawer-item {
   width: 100%;
-  padding: 8px 10px;
+  padding: var(--pad-min-y) var(--pad-min-x);
   border-radius: 12px;
   background: transparent;
   transition: background 0.2s;
@@ -858,7 +877,7 @@ html, body {
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  padding: 6px 8px;
+  padding: var(--pad-min-y) var(--pad-min-x);
   border-radius: 8px;
   white-space: nowrap;
   overflow: hidden;
@@ -1005,7 +1024,7 @@ html, body {
 
 .drawer-add {
   margin: 8px;
-  padding: 14px 16px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 12px;
   border: 2px dashed var(--border);
   background: transparent;
@@ -1045,7 +1064,7 @@ html, body {
   display: none;
   align-items: flex-end;
   justify-content: center;
-  padding: 16px;
+  padding: var(--pad-field-x);
 }
 
 :root[data-app-theme="glass"] .settings-sheet-overlay {
@@ -1084,7 +1103,7 @@ html, body {
 }
 
 .settings-sheet-title {
-  padding: 16px;
+  padding: var(--pad-field-y) var(--pad-field-x);
   text-align: center;
   font-size: 17px;
   font-weight: 600;
@@ -1099,7 +1118,7 @@ html, body {
 }
 
 .settings-content {
-  padding: 20px 16px;
+  padding: var(--pad-field-y) var(--pad-field-x);
 }
 
 .setting-item {
@@ -1187,7 +1206,7 @@ html, body {
 
 .settings-close {
   width: 100%;
-  padding: 16px;
+  padding: var(--pad-field-y) var(--pad-field-x);
   border: none;
   border-top: 1px solid var(--border);
   background: transparent;
@@ -1219,7 +1238,7 @@ html, body {
 
 .theme-option {
   flex: 1;
-  padding: 16px 12px;
+  padding: var(--pad-field-y) var(--pad-btn-x);
   border-radius: 12px;
   border: 2px solid var(--border);
   background: var(--card-bg);
@@ -1360,7 +1379,7 @@ html, body {
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
@@ -1377,6 +1396,7 @@ html, body {
   font-size: 12px;
   font-weight: 600;
   text-align: center;
+  padding: var(--pad-chip-y) var(--pad-chip-x);
 }
 
 .bg-option.custom img {
@@ -1399,7 +1419,7 @@ html, body {
 
 .bg-action-btn {
   flex: 1;
-  padding: 10px 12px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--card-bg);
@@ -1425,7 +1445,7 @@ html, body {
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: var(--pad-field-x);
 }
 
 :root[data-app-theme="glass"] .delete-confirm {
@@ -1443,7 +1463,7 @@ html, body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px;
-  padding: 20px;
+  padding: var(--pad-field-y) var(--pad-field-x);
   max-width: 280px;
   width: 100%;
   text-align: center;
@@ -1486,7 +1506,7 @@ html, body {
 
 .delete-confirm-actions button {
   width: 100%;
-  padding: 12px;
+  padding: var(--pad-btn-y) var(--pad-btn-x);
   border-radius: 12px;
   border: none;
   font-size: 16px;
@@ -1523,9 +1543,25 @@ html, body {
   }
   .cell {
     font-size: 11px;
-    padding: 6px;
+    padding: var(--pad-min-y);
   }
   .table-name {
     font-size: 20px;
   }
+}
+
+/* Keep table title visible when action buttons are revealed by swipe */
+.drawer-item.actions-visible .drawer-item-main {
+  transform: translateX(0) !important;
+}
+
+/* Stable pin icon rendering */
+.drawer-item-main.is-pinned::after {
+  content: '' !important;
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16 3c1.1 0 2 .9 2 2v1.2c0 .53.21 1.04.59 1.41l1 1A2 2 0 0 1 18.17 12H13v8l-1 1-1-1v-8H5.83a2 2 0 0 1-1.42-3.39l1-1c.38-.37.59-.88.59-1.41V5c0-1.1.9-2 2-2h8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M16 3c1.1 0 2 .9 2 2v1.2c0 .53.21 1.04.59 1.41l1 1A2 2 0 0 1 18.17 12H13v8l-1 1-1-1v-8H5.83a2 2 0 0 1-1.42-3.39l1-1c.38-.37.59-.88.59-1.41V5c0-1.1.9-2 2-2h8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  flex-shrink: 0;
 }

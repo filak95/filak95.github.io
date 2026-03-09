@@ -434,7 +434,8 @@ html, body {
   font-weight: 600;
   font-size: 13px;
   text-align: center;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
   overflow: hidden;
   cursor: pointer;
   color: var(--text);
@@ -483,6 +484,7 @@ html, body {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  text-wrap: balance;
 }
 
 .empty-state {

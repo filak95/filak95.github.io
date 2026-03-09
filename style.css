@@ -809,10 +809,9 @@ html, body {
   border-radius: 12px;
   background: transparent;
   transition: background 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
 }
 
 .drawer-item.dragging {
@@ -850,7 +849,7 @@ html, body {
 }
 
 .drawer-item-main {
-  flex: 1;
+  width: 100%;
   min-width: 0;
   border: none;
   background: transparent;
@@ -864,6 +863,46 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transform: translateX(0);
+  transition: transform 0.2s ease, background 0.2s;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-item-main.is-pinned::after {
+  content: '📌';
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.drawer-item-main-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.drawer-item-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer-item-pin-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--primary);
+  flex-shrink: 0;
 }
 
 .drawer-item-main:hover,
@@ -877,9 +916,26 @@ html, body {
 }
 
 .drawer-item-actions {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  z-index: 1;
+}
+
+.drawer-item.actions-visible .drawer-item-main {
+  transform: translateX(-118px);
+}
+
+.drawer-item.actions-visible .drawer-item-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .drawer-item-action {

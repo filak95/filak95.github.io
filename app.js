@@ -50,6 +50,7 @@
     editId: null,
     deleteTargetId: null,
     touchDrag: null,
+    drawerActionId: null,
     get activeTable() {
       if (!this.data.activeId) return null;
       return this.data.tables.find(t => t.id === this.data.activeId) || null;
@@ -446,6 +447,7 @@
   function closeDrawer() {
     document.getElementById('drawerOverlay').classList.remove('visible');
     document.getElementById('drawer').classList.remove('visible');
+    state.drawerActionId = null;
   }
 
   function getDrawerTables() {
@@ -485,6 +487,14 @@
     list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
     list.querySelectorAll('.drawer-item.dragging').forEach(el => el.classList.remove('dragging'));
     state.touchDrag = null;
+  }
+
+  function setDrawerActionRow(list, id) {
+    state.drawerActionId = id || null;
+    if (!list) return;
+    list.querySelectorAll('.drawer-item').forEach(row => {
+      row.classList.toggle('actions-visible', !!id && row.dataset.id === id);
+    });
   }
 
   function handleTouchDragMove(list, touch) {
@@ -536,12 +546,21 @@
     tables.forEach(t => {
       const row = document.createElement('div');
       row.className = 'drawer-item' + (t.id === activeId ? ' active' : '');
+      row.dataset.id = t.id;
+      if (state.drawerActionId === t.id) row.classList.add('actions-visible');
 
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'drawer-item-main';
+      if (t.pinned) {
+        main.classList.add('is-pinned');
+      }
       main.textContent = t.name || '未命名';
       main.addEventListener('click', () => {
+        if (row.classList.contains('actions-visible')) {
+          setDrawerActionRow(list, null);
+          return;
+        }
         switchTable(t.id);
         closeDrawer();
       });
@@ -549,7 +568,6 @@
       const actions = document.createElement('div');
       actions.className = 'drawer-item-actions';
       row.draggable = false;
-      row.dataset.id = t.id;
       row.addEventListener('dragover', (e) => {
         const dragId = e.dataTransfer.getData('text/plain');
         if (!dragId || dragId === t.id) return;
@@ -570,6 +588,33 @@
           row.classList.remove('drag-over');
         }
       });
+      let swipeStartX = 0;
+      let swipeStartY = 0;
+      let swipeTracking = false;
+      row.addEventListener('touchstart', (e) => {
+        if (state.touchDrag) return;
+        if (!e.touches || e.touches.length !== 1) return;
+        if (e.target && e.target.closest('.drawer-item-actions')) return;
+        swipeStartX = e.touches[0].clientX;
+        swipeStartY = e.touches[0].clientY;
+        swipeTracking = true;
+      }, { passive: true });
+      row.addEventListener('touchmove', (e) => {
+        if (!swipeTracking || state.touchDrag) return;
+        if (!e.touches || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - swipeStartX;
+        const dy = e.touches[0].clientY - swipeStartY;
+        if (Math.abs(dx) < 18 || Math.abs(dx) <= Math.abs(dy)) return;
+        e.preventDefault();
+        if (dx < 0) setDrawerActionRow(list, t.id);
+        else setDrawerActionRow(list, null);
+      }, { passive: false });
+      row.addEventListener('touchend', () => {
+        swipeTracking = false;
+      }, { passive: true });
+      row.addEventListener('touchcancel', () => {
+        swipeTracking = false;
+      }, { passive: true });
 
       const pinBtn = document.createElement('button');
       pinBtn.type = 'button';
@@ -581,7 +626,10 @@
           <path d="M16 3c1.1 0 2 .9 2 2v1.2c0 .53.21 1.04.59 1.41l1 1A2 2 0 0 1 18.17 12H13v8l-1 1-1-1v-8H5.83a2 2 0 0 1-1.42-3.39l1-1c.38-.37.59-.88.59-1.41V5c0-1.1.9-2 2-2h8z"/>
         </svg>
       `;
-      pinBtn.addEventListener('click', () => togglePinTable(t.id));
+      pinBtn.addEventListener('click', () => {
+        setDrawerActionRow(list, null);
+        togglePinTable(t.id);
+      });
 
       if (t.pinned) pinBtn.classList.add('active');
 
@@ -598,8 +646,12 @@
         </svg>
       `;
       dragBtn.draggable = true;
+      dragBtn.addEventListener('click', () => {
+        setDrawerActionRow(list, null);
+      });
       dragBtn.addEventListener('dragstart', (e) => {
         e.stopPropagation();
+        setDrawerActionRow(list, null);
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', t.id);
         row.classList.add('dragging');
@@ -608,10 +660,12 @@
         e.stopPropagation();
         row.classList.remove('dragging');
         list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+        setDrawerActionRow(list, null);
       });
       dragBtn.addEventListener('touchstart', (e) => {
         if (!e.touches || e.touches.length !== 1) return;
         e.preventDefault();
+        setDrawerActionRow(list, null);
         clearTouchDragState(list);
         state.touchDrag = {
           dragId: t.id,
@@ -629,6 +683,7 @@
         e.preventDefault();
         const { dragId, overId } = state.touchDrag;
         clearTouchDragState(list);
+        setDrawerActionRow(list, null);
         if (overId && overId !== dragId) {
           reorderTableByIds(dragId, overId);
         }
@@ -648,7 +703,10 @@
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
       `;
-      delBtn.addEventListener('click', () => showDeleteConfirm(t.id, t.name));
+      delBtn.addEventListener('click', () => {
+        setDrawerActionRow(list, null);
+        showDeleteConfirm(t.id, t.name);
+      });
 
       actions.appendChild(pinBtn);
       actions.appendChild(dragBtn);

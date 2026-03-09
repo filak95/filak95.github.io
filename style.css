@@ -805,19 +805,23 @@ html, body {
 
 .drawer-item {
   width: 100%;
-  padding: 14px 16px;
+  padding: 8px 10px;
   border-radius: 12px;
-  border: none;
   background: transparent;
-  color: var(--text);
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
   transition: background 0.2s;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+}
+
+.drawer-item.dragging {
+  opacity: 0.5;
+}
+
+.drawer-item.drag-over {
+  outline: 2px dashed var(--primary);
+  outline-offset: 2px;
 }
 
 :root[data-app-theme="glass"] .drawer-item {
@@ -845,16 +849,102 @@ html, body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.drawer-item-delete {
-  color: var(--danger);
-  font-size: 13px;
-  opacity: 0;
-  transition: opacity 0.2s;
+.drawer-item-main {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.drawer-item:hover .drawer-item-delete,
-.drawer-item:active .drawer-item-delete {
-  opacity: 1;
+.drawer-item-main:hover,
+.drawer-item-main:active {
+  background: rgba(0,0,0,0.06);
+}
+
+:root[data-app-theme="glass"] .drawer-item-main:hover,
+:root[data-app-theme="glass"] .drawer-item-main:active {
+  background: rgba(255,255,255,0.12);
+}
+
+.drawer-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-item-action {
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.8);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-item-action:hover,
+.drawer-item-action:active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.drawer-item-action.active {
+  border-color: var(--primary);
+  color: #fff;
+  background: var(--primary);
+}
+
+.drawer-item-action svg {
+  display: block;
+  pointer-events: none;
+}
+
+.drawer-item-drag {
+  cursor: grab;
+  touch-action: none;
+}
+
+.drawer-item-drag:active {
+  cursor: grabbing;
+}
+
+:root[data-app-theme="glass"] .drawer-item-action {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.28);
+  color: var(--text);
+}
+
+:root[data-app-theme="glass"] .drawer-item-action:hover,
+:root[data-app-theme="glass"] .drawer-item-action:active {
+  background: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.45);
+}
+
+.drawer-item-delete {
+  color: var(--danger);
+  border-color: rgba(255,59,48,0.35);
+}
+
+:root[data-app-theme="glass"] .drawer-item-delete {
+  color: #ffb4ad;
+  border-color: rgba(255,180,173,0.5);
 }
 
 .drawer-add {

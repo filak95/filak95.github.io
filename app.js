@@ -49,6 +49,7 @@
     bgImageUrl: null,
     editId: null,
     deleteTargetId: null,
+    touchDrag: null,
     get activeTable() {
       if (!this.data.activeId) return null;
       return this.data.tables.find(t => t.id === this.data.activeId) || null;
@@ -447,28 +448,215 @@
     document.getElementById('drawer').classList.remove('visible');
   }
 
+  function getDrawerTables() {
+    const tables = state.data.tables || [];
+    const pinned = tables.filter(t => t && t.pinned);
+    const normal = tables.filter(t => t && !t.pinned);
+    return pinned.concat(normal);
+  }
+
+  function reorderTableByIds(dragId, targetId) {
+    if (!dragId || !targetId || dragId === targetId) return;
+    const ordered = getDrawerTables();
+    const from = ordered.findIndex(t => t.id === dragId);
+    const to = ordered.findIndex(t => t.id === targetId);
+    if (from < 0 || to < 0 || from === to) return;
+
+    if (!!ordered[from].pinned !== !!ordered[to].pinned) return;
+
+    const [dragItem] = ordered.splice(from, 1);
+    ordered.splice(to, 0, dragItem);
+    state.data.tables = ordered;
+    saveData(state.data);
+    renderDrawerList();
+  }
+
+  function canReorderTogether(dragId, targetId) {
+    if (!dragId || !targetId || dragId === targetId) return false;
+    const ordered = getDrawerTables();
+    const dragTable = ordered.find(t => t.id === dragId);
+    const targetTable = ordered.find(t => t.id === targetId);
+    if (!dragTable || !targetTable) return false;
+    return !!dragTable.pinned === !!targetTable.pinned;
+  }
+
+  function clearTouchDragState(list) {
+    if (!list) return;
+    list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+    list.querySelectorAll('.drawer-item.dragging').forEach(el => el.classList.remove('dragging'));
+    state.touchDrag = null;
+  }
+
+  function handleTouchDragMove(list, touch) {
+    if (!state.touchDrag) return;
+    const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+    const targetRow = targetEl ? targetEl.closest('.drawer-item') : null;
+    list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+    if (!targetRow) {
+      state.touchDrag.overId = null;
+      return;
+    }
+    const targetId = targetRow.dataset.id;
+    if (!targetId || !canReorderTogether(state.touchDrag.dragId, targetId)) {
+      state.touchDrag.overId = null;
+      return;
+    }
+    state.touchDrag.overId = targetId;
+    if (targetId !== state.touchDrag.dragId) {
+      targetRow.classList.add('drag-over');
+    }
+  }
+
+  function togglePinTable(id) {
+    const target = state.data.tables.find(t => t.id === id);
+    if (!target) return;
+
+    if (target.pinned) {
+      target.pinned = false;
+    } else {
+      state.data.tables.forEach(t => { t.pinned = false; });
+      target.pinned = true;
+      const idx = state.data.tables.findIndex(t => t.id === id);
+      if (idx > 0) {
+        const moved = state.data.tables.splice(idx, 1)[0];
+        state.data.tables.unshift(moved);
+      }
+    }
+
+    saveData(state.data);
+    renderDrawerList();
+  }
+
   function renderDrawerList() {
-    const { tables, activeId } = state.data;
+    const activeId = state.data.activeId;
+    const tables = getDrawerTables();
     const list = document.getElementById('drawerList');
     list.innerHTML = '';
 
     tables.forEach(t => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'drawer-item' + (t.id === activeId ? ' active' : '');
-      btn.innerHTML = `
-        <span>${t.name || '未命名'}</span>
-        <span class="drawer-item-delete">删除</span>
-      `;
-      btn.addEventListener('click', (e) => {
-        if (e.target.classList.contains('drawer-item-delete')) {
-          showDeleteConfirm(t.id, t.name);
-        } else {
-          switchTable(t.id);
-          closeDrawer();
+      const row = document.createElement('div');
+      row.className = 'drawer-item' + (t.id === activeId ? ' active' : '');
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'drawer-item-main';
+      main.textContent = t.name || '未命名';
+      main.addEventListener('click', () => {
+        switchTable(t.id);
+        closeDrawer();
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'drawer-item-actions';
+      row.draggable = false;
+      row.dataset.id = t.id;
+      row.addEventListener('dragover', (e) => {
+        const dragId = e.dataTransfer.getData('text/plain');
+        if (!dragId || dragId === t.id) return;
+        const dragTable = tables.find(x => x.id === dragId);
+        if (!dragTable || !!dragTable.pinned !== !!t.pinned) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        reorderTableByIds(e.dataTransfer.getData('text/plain'), t.id);
+      });
+      row.addEventListener('dragleave', (e) => {
+        if (e.currentTarget === e.target) {
+          row.classList.remove('drag-over');
         }
       });
-      list.appendChild(btn);
+
+      const pinBtn = document.createElement('button');
+      pinBtn.type = 'button';
+      pinBtn.className = 'drawer-item-action';
+      pinBtn.title = t.pinned ? '取消置顶' : '置顶';
+      pinBtn.setAttribute('aria-label', pinBtn.title);
+      pinBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
+          <path d="M16 3c1.1 0 2 .9 2 2v1.2c0 .53.21 1.04.59 1.41l1 1A2 2 0 0 1 18.17 12H13v8l-1 1-1-1v-8H5.83a2 2 0 0 1-1.42-3.39l1-1c.38-.37.59-.88.59-1.41V5c0-1.1.9-2 2-2h8z"/>
+        </svg>
+      `;
+      pinBtn.addEventListener('click', () => togglePinTable(t.id));
+
+      if (t.pinned) pinBtn.classList.add('active');
+
+      const dragBtn = document.createElement('button');
+      dragBtn.type = 'button';
+      dragBtn.className = 'drawer-item-action drawer-item-drag';
+      dragBtn.title = '拖动排序';
+      dragBtn.setAttribute('aria-label', '拖动排序');
+      dragBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="8" y1="6" x2="8" y2="18"></line>
+          <line x1="12" y1="6" x2="12" y2="18"></line>
+          <line x1="16" y1="6" x2="16" y2="18"></line>
+        </svg>
+      `;
+      dragBtn.draggable = true;
+      dragBtn.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', t.id);
+        row.classList.add('dragging');
+      });
+      dragBtn.addEventListener('dragend', (e) => {
+        e.stopPropagation();
+        row.classList.remove('dragging');
+        list.querySelectorAll('.drawer-item.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      dragBtn.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length !== 1) return;
+        e.preventDefault();
+        clearTouchDragState(list);
+        state.touchDrag = {
+          dragId: t.id,
+          overId: null
+        };
+        row.classList.add('dragging');
+      }, { passive: false });
+      dragBtn.addEventListener('touchmove', (e) => {
+        if (!state.touchDrag || !e.touches || e.touches.length !== 1) return;
+        e.preventDefault();
+        handleTouchDragMove(list, e.touches[0]);
+      }, { passive: false });
+      dragBtn.addEventListener('touchend', (e) => {
+        if (!state.touchDrag) return;
+        e.preventDefault();
+        const { dragId, overId } = state.touchDrag;
+        clearTouchDragState(list);
+        if (overId && overId !== dragId) {
+          reorderTableByIds(dragId, overId);
+        }
+      }, { passive: false });
+      dragBtn.addEventListener('touchcancel', () => {
+        clearTouchDragState(list);
+      }, { passive: false });
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'drawer-item-action drawer-item-delete';
+      delBtn.title = '删除';
+      delBtn.setAttribute('aria-label', '删除');
+      delBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      `;
+      delBtn.addEventListener('click', () => showDeleteConfirm(t.id, t.name));
+
+      actions.appendChild(pinBtn);
+      actions.appendChild(dragBtn);
+      actions.appendChild(delBtn);
+
+      row.appendChild(main);
+      row.appendChild(actions);
+      list.appendChild(row);
     });
   }
 
@@ -861,6 +1049,7 @@
   }
 
   function init() {
+    state.data.tables = Array.isArray(state.data.tables) ? state.data.tables : [];
     state.data.theme = state.data.theme || 'light';
     state.data.settings = state.data.settings || {
       cellOpacity: 50,
@@ -873,6 +1062,18 @@
     state.data.settings.background = state.data.settings.background || 'sunset';
     state.data.settings.backgroundImageBrightness = typeof state.data.settings.backgroundImageBrightness === 'number' ? state.data.settings.backgroundImageBrightness : 0.5;
     state.data.settings.useHdImages = state.data.settings.useHdImages !== false;
+    let shouldSave = false;
+    state.data.tables.forEach(t => {
+      if (!Array.isArray(t.words)) {
+        t.words = [];
+        shouldSave = true;
+      }
+      if (!Array.isArray(t.wordPool) || t.wordPool.length === 0) {
+        t.wordPool = Array.from(new Set(t.words));
+        shouldSave = true;
+      }
+    });
+    if (shouldSave) saveData(state.data);
 
     document.documentElement.dataset.theme = state.data.theme;
     document.documentElement.dataset.appTheme = state.data.settings.appTheme;
@@ -941,7 +1142,10 @@
         const t = state.activeTable;
         if (t) {
           const required = newSize * newSize;
-          const wordPool = t.wordPool || t.words || [];
+          const wordPool = (Array.isArray(t.wordPool) && t.wordPool.length > 0)
+            ? t.wordPool
+            : Array.from(new Set(t.words || []));
+          t.wordPool = wordPool;
           if (wordPool.length < required) {
             alert(`词条不足，需要至少 ${required} 个词条才能切换到 ${newSize}×${newSize}。当前词库：${wordPool.length} 个。`);
             return;
